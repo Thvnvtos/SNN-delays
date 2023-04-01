@@ -23,22 +23,42 @@ class Model(nn.Module):
         # returns a list of optimizers
         optimizers_return = []
         
-        if self.config.model_type == 'snn_delays':
+        if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
             if self.config.optimizer_w == 'adam':
                 optimizers_return.append(optim.Adam(self.weights, lr = self.config.lr_w, betas=(0.9,0.999)))
-                optimizers_return.append(optim.Adam(self.positions, lr = self.config.lr_pos, betas=(0.9,0.999)))
-       
-        else:
+            if self.config.model_type == 'snn_delays':
+                if self.config.optimizer_pos == 'adam':
+                    optimizers_return.append(optim.Adam(self.positions, lr = self.config.lr_pos, betas=(0.9,0.999)))
+        elif self.config.model_type == 'ann':
             if self.config.optimizer_w == 'adam':
                 optimizers_return.append(optim.Adam(self.model.parameters(), lr = self.config.lr_w, betas=(0.9,0.999)))
 
         return optimizers_return
 
-    def schedulers(self):
-        pass
+    def schedulers(self, optimizers):
+        # returns a list of schedulers
+        schedulers_return = []
+        
+        if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
+            if self.config.scheduler_w == 'one_cycle':
+                schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[0], max_lr=self.config.max_lr_w,
+                                                                             total_steps=self.config.epochs))
+            if self.config.model_type == 'snn_delays':
+                if self.config.optimizer_pos == 'one_cycle':
+                    schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[0], max_lr=self.config.max_lr_pos,
+                                                                                total_steps=self.config.epochs))
+       
+        elif self.config.model_type == 'ann':
+            if self.config.scheduler_w == 'one_cycle':
+                schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[0], max_lr=self.config.max_lr_w,
+                                                                             total_steps=self.config.epochs))
+
+        return schedulers_return
+    
 
 
     def calc_loss(self, output, y):
+
         if self.config.loss == 'mean': m = torch.mean(output, 0)
 
         # probably better to add it in init, or in general do it one time only
@@ -62,7 +82,7 @@ class Model(nn.Module):
     def train_model(self, train_loader, valid_loader, device):
 
         optimizers = self.optimizers()
-        schedulers = self.schedulers()
+        schedulers = self.schedulers(optimizers)
 
         loss_epochs = {'train':[], 'valid':[]}
         metric_epochs = {'train':[], 'valid':[]}
@@ -97,9 +117,7 @@ class Model(nn.Module):
             self.eval()
             with torch.no_grad():
                 loss_batch, metric_batch = [], []
-                for i, (x, y, _) in enumerate(valid_loader):
-                    
-
+                for i, (x, y, _) in enumerate(valid_loader):                    
                     x = x.permute(1,0,2).float().to(device)
                     y = y.to(device)
 

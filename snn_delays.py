@@ -77,7 +77,7 @@ class SnnDelays(Model):
                 # can you replace with self.weights ?
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0][0].weight, nonlinearity='relu')
 
-        if self.config_init_pos_method == 'uniform':
+        if self.config.init_pos_method == 'uniform':
             for i in range(self.config.n_hidden_layers+1):
                 # can you replace with self.positions?
                 torch.nn.init.uniform_(self.blocks[i][0][0].P, a = self.config.init_pos_a, b = self.config.init_pos_b)
