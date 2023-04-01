@@ -19,15 +19,27 @@ class Config:
     
     n_bins = 70
     n_inputs = 700//n_bins
+
+    n_hidden_layers = 1
     n_hidden_neurons = 128
-    n_hidden_layers = 2
-    n_outputs = 20
+    
+    n_outputs = 20 if dataset == 'shd' else 35
     
     use_batchnorm = True
     dropout_p = 0
+    bias = False
 
-    lr = 1e-3
+    lr_w = 1e-3
+    lr_pos = 0
+
+    optimizer_w = 'adam'
+    optimizer_pos = 'adam'
+
+    loss = 'mean'
+    loss_fn = 'CEloss'
     
+    init_w_method = 'kaiming_uniform'
+
     #############################
     #           Wandb           #
     #############################
