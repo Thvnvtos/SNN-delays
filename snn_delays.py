@@ -74,8 +74,23 @@ class SnnDelays(Model):
     def init_model(self):
         if self.config.init_w_method == 'kaiming_uniform':
             for i in range(self.config.n_hidden_layers+1):
-                print(self.blocks[i][0][0])
+                # can you replace with self.weights ?
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0][0].weight, nonlinearity='relu')
+
+        if self.config_init_pos_method == 'uniform':
+            for i in range(self.config.n_hidden_layers+1):
+                # can you replace with self.positions?
+                torch.nn.init.uniform_(self.blocks[i][0][0].P, a = self.config.init_pos_a, b = self.config.init_pos_b)
+                self.blocks[i][0][0].clamp_parameters()
+
+                if self.config.model_type == 'snn_delays_lr0':
+                    self.blocks[i][0][0].P.requires_grad = False
+
+        for i in range(self.config.n_hidden_layers+1):
+            # can you replace with self.positions?
+            torch.nn.init.constant_(self.blocks[i][0][0].SIG, self.config.sigInit)
+            self.blocks[i][0][0].SIG.requires_grad = False
+
 
 
     def reset_model(self):

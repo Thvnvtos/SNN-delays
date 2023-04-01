@@ -10,7 +10,7 @@ class Config:
 
     seed = 0
 
-    model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays'
+    model_type = 'ann'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
 
     epochs = 10
@@ -62,6 +62,12 @@ class Config:
     right_padding = 0
 
     output_v_threshold = 1e9 # use 1e9 for loss = 'mean' or 'max'
+
+    init_pos_method = 'uniform'
+    init_pos_a = -max_delay//2 
+    init_pos_b = max_delay//2
+
+    sigInit = 0.5
 
     #############################
     #           Wandb           #

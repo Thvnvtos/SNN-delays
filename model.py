@@ -24,7 +24,6 @@ class Model(nn.Module):
         optimizers_return = []
         
         if self.config.model_type == 'snn_delays':
-
             if self.config.optimizer_w == 'adam':
                 optimizers_return.append(optim.Adam(self.weights, lr = self.config.lr_w, betas=(0.9,0.999)))
                 optimizers_return.append(optim.Adam(self.positions, lr = self.config.lr_pos, betas=(0.9,0.999)))

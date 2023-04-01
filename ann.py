@@ -44,6 +44,8 @@ class ANN(Model):
                 print(self.blocks[i][0])
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0].weight, nonlinearity='relu')
 
+    def reset_model(self):
+        pass
 
 
     def forward(self, x):
