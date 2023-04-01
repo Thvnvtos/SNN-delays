@@ -22,11 +22,14 @@ class Model(nn.Module):
     def optimizers(self):
         # returns a list of optimizers
         optimizers_return = []
-        if self.config.optimizer_w == 'adam':
-            optimizers_return.append(optim.Adam(self.model.parameters(), lr = self.config.lr_w, betas=(0.9,0.999)))
         
         if self.config.model_type == 'snn_delays':
-            ############################################    CHANGE !!!    ###############################################   
+
+            if self.config.optimizer_w == 'adam':
+                optimizers_return.append(optim.Adam(self.weights, lr = self.config.lr_w, betas=(0.9,0.999)))
+                optimizers_return.append(optim.Adam(self.positions, lr = self.config.lr_pos, betas=(0.9,0.999)))
+       
+        else:
             if self.config.optimizer_w == 'adam':
                 optimizers_return.append(optim.Adam(self.model.parameters(), lr = self.config.lr_w, betas=(0.9,0.999)))
 
@@ -85,6 +88,8 @@ class Model(nn.Module):
 
                 loss_batch.append(loss.detach().cpu().item())
                 metric_batch.append(metric)
+
+                self.reset_model()
             
             loss_epochs['train'].append(np.mean(loss_batch))
             metric_epochs['train'].append(np.mean(metric_batch))
@@ -94,6 +99,8 @@ class Model(nn.Module):
             with torch.no_grad():
                 loss_batch, metric_batch = [], []
                 for i, (x, y, _) in enumerate(valid_loader):
+                    
+
                     x = x.permute(1,0,2).float().to(device)
                     y = y.to(device)
 
@@ -104,6 +111,8 @@ class Model(nn.Module):
 
                     loss_batch.append(loss.detach().cpu().item())
                     metric_batch.append(metric)
+
+                    self.reset_model()
 
                 loss_epochs['valid'].append(np.mean(loss_batch))
                 metric_epochs['valid'].append(np.mean(metric_batch))
