@@ -10,37 +10,37 @@ class Config:
 
     seed = 0
 
-    model_type = 'snn_delays_lr0'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
+    model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
 
     time_step = 20
     n_bins = 10
 
     epochs = 50
-    batch_size = 256
+    batch_size = 128
 
     ################################################
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'
-    init_tau = 1.5
+    init_tau = 2.0
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 64
+    n_hidden_neurons = 128
     n_outputs = 20 if dataset == 'shd' else 35
     
     dropout_p = 0
     use_batchnorm = True
     bias = False
-    detach_reset = True
+    detach_reset = False
 
-    loss = 'mean'
+    loss = 'max'           # 'mean', 'max', 'spike_count'
     loss_fn = 'CEloss'
     output_v_threshold = 1e9 #use 1e9 for loss = 'mean' or 'max'
 
     v_threshold = 1.0
-    alpha = 3.0
+    alpha = 5.0
     surrogate_function = surrogate.ATan(alpha = alpha)#FastSigmoid(alpha)
 
     init_w_method = 'kaiming_uniform'
@@ -52,14 +52,14 @@ class Config:
     optimizer_pos = 'adam'
 
     lr_w = 1e-3
-    lr_pos = 0
+    lr_pos = 500*lr_w
     
     scheduler_w = 'one_cycle'    # 'one_cycle', 'cosine_a'
-    scheduler_pos = 'one_cycle'
+    scheduler_pos = 'cosine_a'
 
     # for one cycle
-    max_lr_w = 4
-    max_lr_pos = 2
+    max_lr_w = 1.5 * lr_w
+    max_lr_pos = 5 * lr_pos
 
     # for cosine annealing
     t_max_w = epochs
@@ -69,11 +69,15 @@ class Config:
     #                    Delays                    #
     ################################################
     DCLSversion = 'gauss'
+    decrease_sig_method = 'exp'
     kernel_count = 1
 
-    sigInit = 0.5
     max_delay = 500//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
+    
+    sigInit = 0.5#max_delay // 3
+    final_epoch = 0#(4*epochs)//5
+
 
     left_padding = max_delay-1
     right_padding = (max_delay-1) // 2
@@ -85,9 +89,9 @@ class Config:
     #############################
     #           Wandb           #
     #############################
-    use_wandb = False
+    use_wandb = True
 
-    wandb_project_name = 'project'
-    wandb_run_name = ''
+    wandb_project_name = 'SHD-BestACC'
+    wandb_run_name = 'New_' + dataset + '_' + model_type + 'max'
 
 

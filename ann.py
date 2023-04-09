@@ -41,12 +41,13 @@ class ANN(Model):
     def init_model(self):
         if self.config.init_w_method == 'kaiming_uniform':
             for i in range(self.config.n_hidden_layers+1):
-                print(self.blocks[i][0])
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0].weight, nonlinearity='relu')
 
     def reset_model(self):
         pass
 
+    def decrease_sig(self, epoch):
+        pass
 
     def forward(self, x):
         out = []

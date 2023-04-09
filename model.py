@@ -1,5 +1,5 @@
 import numpy as np
-
+import wandb
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -44,9 +44,12 @@ class Model(nn.Module):
                 schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[0], max_lr=self.config.max_lr_w,
                                                                              total_steps=self.config.epochs))
             if self.config.model_type == 'snn_delays':
-                if self.config.optimizer_pos == 'one_cycle':
-                    schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[0], max_lr=self.config.max_lr_pos,
+                if self.config.scheduler_pos == 'one_cycle':
+                    schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[1], max_lr=self.config.max_lr_pos,
                                                                                 total_steps=self.config.epochs))
+                elif self.config.scheduler_pos == 'cosine_a':
+                    schedulers_return.append(torch.optim.lr_scheduler.CosineAnnealingLR(optimizers[1],  
+                                                                                        T_max = self.config.t_max_pos))
        
         elif self.config.model_type == 'ann':
             if self.config.scheduler_w == 'one_cycle':
@@ -60,6 +63,7 @@ class Model(nn.Module):
     def calc_loss(self, output, y):
 
         if self.config.loss == 'mean': m = torch.mean(output, 0)
+        elif self.config.loss == 'max': m, _ = torch.max(output, 0)
 
         # probably better to add it in init, or in general do it one time only
         if self.config.loss_fn == 'CEloss':
@@ -74,12 +78,21 @@ class Model(nn.Module):
     def calc_metric(self, output, y):
         # mean accuracy over batch
         if self.config.loss == 'mean': m = torch.mean(output, 0)
+        elif self.config.loss == 'max': m, _ = torch.max(output, 0)
 
         return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
     
 
 
     def train_model(self, train_loader, valid_loader, device):
+
+        if self.config.use_wandb:
+            wandb.login(key="25f19d79982fd7c29f092981a100f187f2c706b4")
+
+            wandb.init(
+                project= self.config.wandb_project_name,
+                name=self.config.wandb_run_name)
+        
 
         optimizers = self.optimizers()
         schedulers = self.schedulers(optimizers)
@@ -108,11 +121,14 @@ class Model(nn.Module):
                 loss_batch.append(loss.detach().cpu().item())
                 metric_batch.append(metric)
 
-                self.reset_model()
+                self.reset_model(train=True)
+                
             
             loss_epochs['train'].append(np.mean(loss_batch))
             metric_epochs['train'].append(np.mean(metric_batch))
 
+            for scheduler in schedulers: scheduler.step()
+            self.decrease_sig(epoch)
 
             self.eval()
             with torch.no_grad():
@@ -129,10 +145,37 @@ class Model(nn.Module):
                     loss_batch.append(loss.detach().cpu().item())
                     metric_batch.append(metric)
 
-                    self.reset_model()
+                    self.reset_model(train=False)
 
                 loss_epochs['valid'].append(np.mean(loss_batch))
                 metric_epochs['valid'].append(np.mean(metric_batch))
                 
         
             print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Best Acc Train = {100*max(metric_epochs['train']):.2f}% \nLoss Test = {loss_epochs['valid'][-1]:.3f}  |  Best Acc Test = {100*max(metric_epochs['valid']):.2f}%")
+
+            if self.config.use_wandb:
+                lr_w = schedulers[0].get_last_lr()[0]
+
+                if self.config.model_type in ['snn_delays', 'snn_delays_lro']:
+                    sig = self.blocks[0][0][0].SIG[0,0,0,0].detach().cpu().item()
+                if self.config.model_type  == 'snn_delays':
+                    lr_pos = schedulers[1].get_last_lr()[0]
+                
+                
+                if self.config.model_type == 'snn_delays':
+                    wandb.log({"Epoch":epoch,"loss_train":loss_epochs['train'][-1], 
+                            "acc_train" : metric_epochs['train'][-1], "acc_test" : metric_epochs['valid'][-1], 
+                            "loss_test" : loss_epochs['valid'][-1],"lr_w":lr_w, "lr_p":lr_pos, "sigma":sig})
+                
+                elif self.config.model_type == 'snn_delays_lr0':
+                    wandb.log({"Epoch":epoch,"loss_train":loss_epochs['train'][-1], 
+                            "acc_train" : metric_epochs['train'][-1], "acc_test" : metric_epochs['valid'][-1], 
+                            "loss_test" : loss_epochs['valid'][-1],
+                            "lr_w":lr_w, "sigma":sig})
+                else:
+                    wandb.log({"Epoch":epoch,"loss_train":loss_epochs['train'][-1], 
+                            "acc_train" : metric_epochs['train'][-1], "acc_test" : metric_epochs['valid'][-1], 
+                            "loss_test" : loss_epochs['valid'][-1],"lr_w":lr_w})
+        
+        if self.config.use_wandb:
+            wandb.run.finish()   

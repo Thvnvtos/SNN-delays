@@ -93,13 +93,29 @@ class SnnDelays(Model):
 
 
 
-    def reset_model(self):
+    def reset_model(self, train=True):
         functional.reset_net(self)
 
         # We use clamp_parameters of the GDcls1d modules
-        for block in self.blocks:
-            block[0][0].clamp_parameters()
+        if train: 
+            for block in self.blocks:
+                block[0][0].clamp_parameters()
 
+
+
+    def decrease_sig(self, epoch):
+        
+        alpha = 0
+        if self.config.decrease_sig_method == 'exp':
+            if epoch < self.config.final_epoch:
+                if self.config.DCLSversion == 'v2':
+                    alpha = (1/self.config.sigInit)**(1/(self.config.final_epoch))
+                elif self.config.DCLSversion == 'gauss':
+                    alpha = (0.5/self.config.sigInit)**(1/(self.config.final_epoch))
+
+                for block in self.blocks:
+                    block[0][0].SIG *= alpha
+                    block[0][0].clamp_parameters()
 
 
     def forward(self, x):
