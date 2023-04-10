@@ -8,7 +8,7 @@ class Config:
     debug = False
     datasets_path = '../Datasets'
 
-    seed = 1
+    seed = 0
 
     model_type = 'snn_delays_lr0'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
@@ -22,8 +22,8 @@ class Config:
     ################################################
     #               Model Achitecture              #
     ################################################
-    spiking_neuron_type = 'lif'
-    init_tau = 1.2
+    spiking_neuron_type = 'plif'         # plif, lif
+    init_tau = 2.0
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
@@ -35,9 +35,9 @@ class Config:
     bias = False
     detach_reset = False
 
-    loss = 'spike_count'           # 'mean', 'max', 'spike_count'
+    loss = 'mean'           # 'mean', 'max', 'spike_count'
     loss_fn = 'CEloss'
-    output_v_threshold = 5.0 if loss == 'spike_count' else 1e9  #use 1e9 for loss = 'mean' or 'max'
+    output_v_threshold = 2.0 if loss == 'spike_count' else 1e9  #use 1e9 for loss = 'mean' or 'max'
 
     v_threshold = 1.0
     alpha = 5.0
@@ -52,7 +52,7 @@ class Config:
     optimizer_pos = 'adam'
 
     lr_w = 1e-3
-    lr_pos = 500*lr_w
+    lr_pos = 100*lr_w
     
     scheduler_w = 'one_cycle'    # 'one_cycle', 'cosine_a'
     scheduler_pos = 'cosine_a'
@@ -76,14 +76,14 @@ class Config:
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
     sigInit = 0.5#max_delay // 3
-    final_epoch = (4*epochs)//5
+    final_epoch = 0#(4*epochs)//5
 
 
     left_padding = max_delay-1
     right_padding = (max_delay-1) // 2
 
     init_pos_method = 'uniform'
-    init_pos_a = -max_delay//2 
+    init_pos_a = -max_delay//2
     init_pos_b = max_delay//2
 
     #############################
@@ -92,8 +92,8 @@ class Config:
     use_wandb = True
 
     wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = 'New ||' + dataset + '||' + model_type + '||' +  loss
+    wandb_run_name = f'SOTA||{dataset}||{model_type} ||{loss}||seed={seed}'
 
-    wandb_group_name = 'Testing New'
+    wandb_group_name = f"Tests {model_type}"
 
 
