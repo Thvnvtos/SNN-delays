@@ -67,6 +67,7 @@ class Model(nn.Module):
         if self.config.loss == 'mean': m = torch.mean(output, 0)
         elif self.config.loss == 'max': m, _ = torch.max(output, 0)
         elif self.config.loss == 'spike_count': m = torch.sum(output, 0)
+        elif self.config.loss == 'sum': m = torch.sum(output, 0 )
 
         # probably better to add it in init, or in general do it one time only
         if self.config.loss_fn == 'CEloss':
@@ -168,7 +169,7 @@ class Model(nn.Module):
                 lr_w = schedulers[0].get_last_lr()[0]
 
                 if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
-                    sig = self.blocks[0][0][0].SIG[0,0,0,0].detach().cpu().item()
+                    sig = self.blocks[-1][0][0].SIG[0,0,0,0].detach().cpu().item()
                 if self.config.model_type  == 'snn_delays':
                     lr_pos = schedulers[1].get_last_lr()[0]
                 
