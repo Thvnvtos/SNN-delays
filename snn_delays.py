@@ -8,7 +8,7 @@ from spikingjelly.activation_based import functional
 from DCLG.Conv import GDcls1d
 
 from model import Model
-
+from utils import set_seed
 
 
 class SnnDelays(Model):
@@ -72,6 +72,9 @@ class SnnDelays(Model):
 
 
     def init_model(self):
+
+        set_seed(self.config.seed)
+
         if self.config.init_w_method == 'kaiming_uniform':
             for i in range(self.config.n_hidden_layers+1):
                 # can you replace with self.weights ?

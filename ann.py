@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from model import Model
-
+from utils import set_seed
 
 
 class ANN(Model):
@@ -39,6 +39,8 @@ class ANN(Model):
 
 
     def init_model(self):
+        set_seed(self.config.seed)
+
         if self.config.init_w_method == 'kaiming_uniform':
             for i in range(self.config.n_hidden_layers+1):
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0].weight, nonlinearity='relu')

@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from config import Config
+from utils import set_seed
 
 
 class Model(nn.Module):
@@ -64,6 +66,7 @@ class Model(nn.Module):
 
         if self.config.loss == 'mean': m = torch.mean(output, 0)
         elif self.config.loss == 'max': m, _ = torch.max(output, 0)
+        elif self.config.loss == 'spike_count': m = torch.sum(output, 0)
 
         # probably better to add it in init, or in general do it one time only
         if self.config.loss_fn == 'CEloss':
@@ -79,6 +82,7 @@ class Model(nn.Module):
         # mean accuracy over batch
         if self.config.loss == 'mean': m = torch.mean(output, 0)
         elif self.config.loss == 'max': m, _ = torch.max(output, 0)
+        elif self.config.loss == 'spike_count': m = torch.sum(output, 0)
 
         return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
     
@@ -86,12 +90,19 @@ class Model(nn.Module):
 
     def train_model(self, train_loader, valid_loader, device):
 
+        set_seed(self.config.seed)
+
         if self.config.use_wandb:
+            
+            cfg = {k:v for k,v in dict(vars(Config)).items() if '__' not in k}
+
             wandb.login(key="25f19d79982fd7c29f092981a100f187f2c706b4")
 
             wandb.init(
                 project= self.config.wandb_project_name,
-                name=self.config.wandb_run_name)
+                name=self.config.wandb_run_name,
+                config = cfg,
+                group = self.config.wandb_group_name)
         
 
         optimizers = self.optimizers()
@@ -156,7 +167,7 @@ class Model(nn.Module):
             if self.config.use_wandb:
                 lr_w = schedulers[0].get_last_lr()[0]
 
-                if self.config.model_type in ['snn_delays', 'snn_delays_lro']:
+                if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
                     sig = self.blocks[0][0][0].SIG[0,0,0,0].detach().cpu().item()
                 if self.config.model_type  == 'snn_delays':
                     lr_pos = schedulers[1].get_last_lr()[0]
