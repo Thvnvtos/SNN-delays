@@ -17,12 +17,12 @@ class Config:
     n_bins = 10
 
     epochs = 50
-    batch_size = 128
+    batch_size = 64
 
     ################################################
     #               Model Achitecture              #
     ################################################
-    spiking_neuron_type = 'plif'         # plif, lif
+    spiking_neuron_type = 'lif'         # plif, lif
     init_tau = 2.0
 
     n_inputs = 700//n_bins
@@ -30,12 +30,12 @@ class Config:
     n_hidden_neurons = 128
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0
+    dropout_p = 0.1
     use_batchnorm = True
     bias = False
     detach_reset = False
 
-    loss = 'mean'           # 'mean', 'max', 'spike_count'
+    loss = 'sum'           # 'mean', 'max', 'spike_count', 'sum
     loss_fn = 'CEloss'
     output_v_threshold = 2.0 if loss == 'spike_count' else 1e9  #use 1e9 for loss = 'mean' or 'max'
 
@@ -51,14 +51,14 @@ class Config:
     optimizer_w = 'adam'
     optimizer_pos = 'adam'
 
-    lr_w = 1e-3
-    lr_pos = 100*lr_w
+    lr_w = 1e-2
+    lr_pos = 250*lr_w
     
     scheduler_w = 'one_cycle'    # 'one_cycle', 'cosine_a'
     scheduler_pos = 'cosine_a'
 
     # for one cycle
-    max_lr_w = 2 * lr_w
+    max_lr_w = 1.5 * lr_w
     max_lr_pos = 5 * lr_pos
 
     # for cosine annealing
@@ -72,7 +72,7 @@ class Config:
     decrease_sig_method = 'exp'
     kernel_count = 1
 
-    max_delay = 500//time_step
+    max_delay = 200//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
     sigInit = 0.5#max_delay // 3
@@ -92,7 +92,7 @@ class Config:
     use_wandb = True
 
     wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = f'SOTA||{dataset}||{model_type} ||{loss}||seed={seed}'
+    wandb_run_name = f'SOTA||{dataset}||{model_type}||{loss}||seed={seed}||MaxDelay={max_delay}'
 
     wandb_group_name = f"Tests {model_type}"
 

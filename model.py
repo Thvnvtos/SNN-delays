@@ -67,7 +67,9 @@ class Model(nn.Module):
         if self.config.loss == 'mean': m = torch.mean(output, 0)
         elif self.config.loss == 'max': m, _ = torch.max(output, 0)
         elif self.config.loss == 'spike_count': m = torch.sum(output, 0)
-        elif self.config.loss == 'sum': m = torch.sum(output, 0 )
+        elif self.config.loss == 'sum': 
+            softmax_fn = nn.Softmax(dim=2) 
+            m = torch.sum(softmax_fn(output), 0)
 
         # probably better to add it in init, or in general do it one time only
         if self.config.loss_fn == 'CEloss':
@@ -84,6 +86,9 @@ class Model(nn.Module):
         if self.config.loss == 'mean': m = torch.mean(output, 0)
         elif self.config.loss == 'max': m, _ = torch.max(output, 0)
         elif self.config.loss == 'spike_count': m = torch.sum(output, 0)
+        elif self.config.loss == 'sum': 
+            softmax_fn = nn.Softmax(dim=2) 
+            m = torch.sum(softmax_fn(output), 0)
 
         return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
     
