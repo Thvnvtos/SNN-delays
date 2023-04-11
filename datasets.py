@@ -1,5 +1,7 @@
 from utils import set_seed
 
+import numpy as np
+
 from torch.utils.data import DataLoader
 
 from spikingjelly.datasets.shd import SpikingHeidelbergDigits
@@ -8,11 +10,21 @@ from spikingjelly.datasets import pad_sequence_collate
 
 
 
+class RNoise(object):
+  
+  def __init__(self, sig):
+    self.sig = sig
+        
+
+  def __call__(self, sample):
+    noise = np.random.normal(0, self.sig, size=sample.shape).round()
+    return sample + noise
+
 
 def SHD_dataloaders(config):
   set_seed(config.seed)
 
-  train_dataset = SpikingHeidelbergDigits(config.datasets_path, config.n_bins, train=True, data_type='frame', duration=config.time_step)
+  train_dataset = SpikingHeidelbergDigits(config.datasets_path, config.n_bins, train=True, data_type='frame', duration=config.time_step, transform=RNoise(config.rnoise_sig))
   test_dataset= SpikingHeidelbergDigits(config.datasets_path, config.n_bins, train=False, data_type='frame', duration=config.time_step)
 
 
