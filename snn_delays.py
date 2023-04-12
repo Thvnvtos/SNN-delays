@@ -21,6 +21,8 @@ class SnnDelays(Model):
     # Check ThresholdDependent batchnorm (in spikingjelly)
     def build_model(self):
 
+        ################################################   First Layer    #######################################################
+
         # self.blocks = (n_layers, 0:weights+bn | 1: lif+dropout,  0,1)
 
         self.blocks = [[[GDcls1d(self.config.n_inputs, self.config.n_hidden_neurons, kernel_count=self.config.kernel_count, groups = 1, 
@@ -40,6 +42,13 @@ class SnnDelays(Model):
                                                        step_mode='m', decay_input=False, store_v_seq = True))
 
 
+        if self.config.stateful_synapse:
+            self.blocks[0][1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_tau, 
+                                                         step_mode='m'))
+
+
+        ################################################   Hidden Layers    #######################################################
+
         for i in range(self.config.n_hidden_layers-1):
             self.block = [[GDcls1d(self.config.n_hidden_neurons, self.config.n_hidden_neurons, kernel_count=self.config.kernel_count, groups = 1, 
                                 dilated_kernel_size = self.config.max_delay, bias=self.config.bias, version=self.config.DCLSversion)],
@@ -56,7 +65,14 @@ class SnnDelays(Model):
                                                        surrogate_function=self.config.surrogate_function, detach_reset=self.config.detach_reset, 
                                                        step_mode='m', decay_input=False, store_v_seq = True))
             
+            if self.config.stateful_synapse:
+                self.block[1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_tau, 
+                                                             step_mode='m'))
+
             self.blocks.append(self.block)
+
+
+        ################################################   Final Layer    #######################################################
 
 
         self.final_block = [[GDcls1d(self.config.n_hidden_neurons, self.config.n_outputs, kernel_count=self.config.kernel_count, groups = 1, 

@@ -16,16 +16,20 @@ class Config:
     time_step = 20
     n_bins = 10
 
-    epochs = 60
-    batch_size = 128
+    epochs = 50
+    batch_size = 64
 
-    rnoise_sig = 1
+    rnoise_sig = 0
 
     ################################################
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
     init_tau = 1.5
+
+    stateful_synapse = True
+    stateful_synapse_tau = 2.0
+    stateful_synapse_learnable = False
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
@@ -35,7 +39,7 @@ class Config:
     dropout_p = 0.1
     use_batchnorm = True
     bias = False
-    detach_reset = True
+    detach_reset = False
 
     loss = 'sum'           # 'mean', 'max', 'spike_count', 'sum
     loss_fn = 'CEloss'
@@ -91,7 +95,7 @@ class Config:
     #############################
     #           Wandb           #
     #############################
-    use_wandb = True
+    use_wandb = False
 
     wandb_project_name = 'SHD-BestACC'
     wandb_run_name = f'SOTA||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
