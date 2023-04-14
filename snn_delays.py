@@ -43,7 +43,7 @@ class SnnDelays(Model):
 
 
         if self.config.stateful_synapse:
-            self.blocks[0][1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_tau, 
+            self.blocks[0][1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_learnable, 
                                                          step_mode='m'))
 
 
@@ -66,7 +66,7 @@ class SnnDelays(Model):
                                                        step_mode='m', decay_input=False, store_v_seq = True))
             
             if self.config.stateful_synapse:
-                self.block[1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_tau, 
+                self.block[1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_learnable, 
                                                              step_mode='m'))
 
             self.blocks.append(self.block)
