@@ -13,11 +13,11 @@ class Config:
     model_type = 'snn_delays_lr0'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
 
-    time_step = 20
-    n_bins = 10
+    time_step = 10
+    n_bins = 5
 
     epochs = 50
-    batch_size = 64
+    batch_size = 128
 
     rnoise_sig = 0
 
@@ -25,7 +25,7 @@ class Config:
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 1.5
+    init_tau = 2.0
 
     stateful_synapse = True
     stateful_synapse_tau = 2.0
@@ -33,13 +33,13 @@ class Config:
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 128
+    n_hidden_neurons = 256
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.1
+    dropout_p = 0.2
     use_batchnorm = True
     bias = False
-    detach_reset = False
+    detach_reset = True
 
     loss = 'sum'           # 'mean', 'max', 'spike_count', 'sum
     loss_fn = 'CEloss'
@@ -78,7 +78,7 @@ class Config:
     decrease_sig_method = 'exp'
     kernel_count = 1
 
-    max_delay = 200//time_step
+    max_delay = 250//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
     sigInit = 0.5#max_delay // 2
@@ -95,11 +95,11 @@ class Config:
     #############################
     #           Wandb           #
     #############################
-    use_wandb = False
+    use_wandb = True
 
     wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = f'SOTA||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
+    wandb_run_name = f'SEEDTEST_PC_try=1||seed={seed}||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
-    wandb_group_name = f"Tests {model_type}"
+    wandb_group_name = f"SEED_TEST {model_type}"
 
 

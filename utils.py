@@ -1,11 +1,19 @@
 import numpy as np
-import random
+import random, sys
 import torch
-
 
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def check_versions():
+    python_version = sys.version .split(' ')[0]
+    print("============== Checking Packages versions ================")
+    print(f"python {python_version}")
+    print(f"numpy {np.__version__}")
+    print(f"pytorch {torch.__version__}")
+
 
 
 def set_seed(seed):

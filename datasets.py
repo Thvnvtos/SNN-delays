@@ -16,7 +16,7 @@ class RNoise(object):
     self.sig = sig
         
   def __call__(self, sample):
-    noise = np.random.normal(0, self.sig, size=sample.shape).round()
+    noise = np.abs(np.random.normal(0, self.sig, size=sample.shape).round())
     return sample + noise
 
 
