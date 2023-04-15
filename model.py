@@ -210,7 +210,7 @@ class Model(nn.Module):
             if self.config.use_wandb:
 
                 lr_w = schedulers[0].get_last_lr()[0] if self.config.scheduler_w != 'none' else self.config.lr_w
-                lr_pos = schedulers[1].get_last_lr()[0] if self.config.scheduler_pos != 'none' else self.config.lr_pos
+                lr_pos = schedulers[1].get_last_lr()[0] if self.config.model_type == 'snn_delays' and self.config.scheduler_pos != 'none' else self.config.lr_pos
 
                 wandb_logs = {"Epoch":epoch,
                               "loss_train":loss_epochs['train'][-1], 

@@ -6,17 +6,17 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '../Datasets'
+    datasets_path = '../Datasets' # '/content'
 
     seed = 0
 
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
 
-    time_step = 10
+    time_step = 20
     n_bins = 10
 
-    epochs = 50
+    epochs = 30
     batch_size = 128
 
     rnoise_sig = 0
@@ -24,12 +24,12 @@ class Config:
     ################################################
     #               Model Achitecture              #
     ################################################
-    spiking_neuron_type = 'plif'         # plif, lif
-    init_tau = 15.0                      # in ms, can't be < time_step
+    spiking_neuron_type = 'lif'         # plif, lif
+    init_tau = 20.0                      # in ms, can't be < time_step
 
-    stateful_synapse_tau = 15.0         # in ms, can't be < time_step
+    stateful_synapse_tau = 50.0         # in ms, can't be < time_step
     stateful_synapse = True
-    stateful_synapse_learnable = True
+    stateful_synapse_learnable = False
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
@@ -103,7 +103,7 @@ class Config:
     use_wandb = True
 
     wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = f'Baseline Tests||Ts = 10ms, Learnable taus||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
+    wandb_run_name = f'Baseline Tests||Fine-tine Test||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
 
     wandb_group_name = f"Baseline Tests {model_type}"
 

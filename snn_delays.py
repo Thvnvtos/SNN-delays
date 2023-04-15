@@ -150,8 +150,9 @@ class SnnDelays(Model):
     def decrease_sig(self, epoch):
         
         alpha = 0
+        sig = self.blocks[-1][0][0].SIG[0,0,0,0].detach().cpu().item()
         if self.config.decrease_sig_method == 'exp':
-            if epoch < self.config.final_epoch:
+            if epoch < self.config.final_epoch and sig > 0.5:
                 if self.config.DCLSversion == 'v2':
                     alpha = (1/self.config.sigInit)**(1/(self.config.final_epoch))
                 elif self.config.DCLSversion == 'gauss':
@@ -231,3 +232,9 @@ class SnnDelays(Model):
                                f'w_{i}':w})
 
         return model_logs
+
+
+    def round_pos(self):
+        with torch.no_grad():
+            for i in range(len(self.blocks)):
+                self.blocks[i][0][0].P.round_()
