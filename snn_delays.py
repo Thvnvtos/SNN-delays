@@ -207,7 +207,7 @@ class SnnDelays(Model):
 
         return out
     
-    
+
 
     def get_model_wandb_logs(self):
 
@@ -219,9 +219,15 @@ class SnnDelays(Model):
         for i in range(len(self.blocks)):
             
             tau_m = self.blocks[i][1][0].tau if self.config.spiking_neuron_type == 'lif' else  1. / self.blocks[i][1][0].w.sigmoid()
-            tau_s = self.blocks[i][1][2].tau if self.config.stateful_synapse else  0
+            
+            if self.config.stateful_synapse and i<len(self.blocks)-1:
+                tau_s = self.blocks[i][1][2].tau if not self.config.stateful_synapse_learnable else  1. / self.blocks[i][1][2].w.sigmoid()
+            else: tau_s = 0
+            
             w = torch.abs(self.blocks[i][0][0].weight).mean()
 
-            model_logs.update({f'tau_m_{i}':tau_m, f'tau_s_{i}':tau_s, f'w_{i}':w})
+            model_logs.update({f'tau_m_{i}':tau_m*self.config.time_step, 
+                               f'tau_s_{i}':tau_s*self.config.time_step, 
+                               f'w_{i}':w})
 
         return model_logs

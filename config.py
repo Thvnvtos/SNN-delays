@@ -13,8 +13,8 @@ class Config:
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
 
-    time_step = 5
-    n_bins = 5
+    time_step = 10
+    n_bins = 10
 
     epochs = 50
     batch_size = 128
@@ -24,16 +24,16 @@ class Config:
     ################################################
     #               Model Achitecture              #
     ################################################
-    spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 1.05
+    spiking_neuron_type = 'plif'         # plif, lif
+    init_tau = 15.0                      # in ms, can't be < time_step
 
+    stateful_synapse_tau = 15.0         # in ms, can't be < time_step
     stateful_synapse = True
-    stateful_synapse_tau = 20.0
-    stateful_synapse_learnable = False
+    stateful_synapse_learnable = True
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 256
+    n_hidden_neurons = 128
     n_outputs = 20 if dataset == 'shd' else 35
     
     dropout_p = 0.2
@@ -51,6 +51,8 @@ class Config:
 
     init_w_method = 'kaiming_uniform'
 
+    init_tau = (init_tau  +  1e-9) / time_step
+    stateful_synapse_tau = (stateful_synapse_tau  +  1e-9) / time_step
     ################################################
     #                Optimization                  #
     ################################################
@@ -58,7 +60,7 @@ class Config:
     optimizer_pos = 'adam'
 
     lr_w = 1e-3
-    lr_pos = 100*lr_w   if model_type =='snn_delays' else 0
+    lr_pos = 200*lr_w   if model_type =='snn_delays' else 0
     
     # 'one_cycle', 'cosine_a', 'none'
     scheduler_w = 'one_cycle'    
@@ -66,7 +68,7 @@ class Config:
 
 
     # for one cycle
-    max_lr_w = 2 * lr_w
+    max_lr_w = 5 * lr_w
     max_lr_pos = 5 * lr_pos
 
 
@@ -81,15 +83,15 @@ class Config:
     decrease_sig_method = 'exp'
     kernel_count = 1
 
-    max_delay = 300//time_step
+    max_delay = 250//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 3
+    sigInit = max_delay // 4
     final_epoch = (1*epochs)//2
 
 
     left_padding = max_delay-1
-    right_padding = (max_delay-1) // 4
+    right_padding = (max_delay-1) // 3
 
     init_pos_method = 'uniform'
     init_pos_a = -max_delay//2
@@ -101,8 +103,8 @@ class Config:
     use_wandb = True
 
     wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = f'IMPROV||0.25 padding right||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
+    wandb_run_name = f'Baseline Tests||Ts = 10ms, Learnable taus||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
 
-    wandb_group_name = f"IMPROV {model_type}"
+    wandb_group_name = f"Baseline Tests {model_type}"
 
 

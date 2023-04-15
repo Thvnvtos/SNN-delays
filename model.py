@@ -219,7 +219,7 @@ class Model(nn.Module):
                               "acc_test" : metric_epochs['valid'][-1],
                               
                               "lr_w" : lr_w,
-                              "lor_pos" : lr_pos}
+                              "lr_pos" : lr_pos}
 
                 model_logs = self.get_model_wandb_logs()
 
