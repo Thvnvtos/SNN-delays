@@ -17,12 +17,12 @@ class Model(nn.Module):
         self.build_model()
         self.init_model()
 
-    #def forward(self, x):
-    #    return self.model(x)
 
 
     def optimizers(self):
-        # returns a list of optimizers
+        ##################################
+        #  returns a list of optimizers
+        ##################################
         optimizers_return = []
         
         if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
@@ -37,8 +37,14 @@ class Model(nn.Module):
 
         return optimizers_return
 
+
+
+
     def schedulers(self, optimizers):
-        # returns a list of schedulers
+        ##################################
+        #  returns a list of schedulers
+        #  if self.config.scheduler_x is none:  list will be empty
+        ##################################
         schedulers_return = []
         
         if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
@@ -85,6 +91,7 @@ class Model(nn.Module):
             return loss_fn(log_p_y, y)
         
 
+
     def calc_metric(self, output, y):
         # mean accuracy over batch
         if self.config.loss == 'mean': m = torch.mean(output, 0)
@@ -98,7 +105,19 @@ class Model(nn.Module):
     
 
 
+
+
     def train_model(self, train_loader, valid_loader, device):
+        
+        ################################################################################################
+        #           Main Training Loop for all models
+        #
+        #
+        #
+
+
+
+        ##################################    Initializations    ##############################
 
         set_seed(self.config.seed)
 
@@ -117,6 +136,11 @@ class Model(nn.Module):
 
         optimizers = self.optimizers()
         schedulers = self.schedulers(optimizers)
+
+
+
+        ##################################    Train Loop    ##############################
+
 
         loss_epochs = {'train':[], 'valid':[]}
         metric_epochs = {'train':[], 'valid':[]}
@@ -151,6 +175,10 @@ class Model(nn.Module):
             for scheduler in schedulers: scheduler.step()
             self.decrease_sig(epoch)
 
+
+
+            ##################################    Eval Loop    ##############################
+
             self.eval()
             with torch.no_grad():
                 loss_batch, metric_batch = [], []
@@ -172,31 +200,33 @@ class Model(nn.Module):
                 metric_epochs['valid'].append(np.mean(metric_batch))
                 
         
+
+            ##########################      Logging and Plotting ##########################
+
+
             print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Best Acc Train = {100*max(metric_epochs['train']):.2f}% \nLoss Test = {loss_epochs['valid'][-1]:.3f}  |  Best Acc Test = {100*max(metric_epochs['valid']):.2f}%")
 
-            if self.config.use_wandb:
-                lr_w = schedulers[0].get_last_lr()[0]
 
-                if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
-                    sig = self.blocks[-1][0][0].SIG[0,0,0,0].detach().cpu().item()
-                if self.config.model_type  == 'snn_delays':
-                    lr_pos = schedulers[1].get_last_lr()[0]
-                
-                
-                if self.config.model_type == 'snn_delays':
-                    wandb.log({"Epoch":epoch,"loss_train":loss_epochs['train'][-1], 
-                            "acc_train" : metric_epochs['train'][-1], "acc_test" : metric_epochs['valid'][-1], 
-                            "loss_test" : loss_epochs['valid'][-1],"lr_w":lr_w, "lr_p":lr_pos, "sigma":sig})
-                
-                elif self.config.model_type == 'snn_delays_lr0':
-                    wandb.log({"Epoch":epoch,"loss_train":loss_epochs['train'][-1], 
-                            "acc_train" : metric_epochs['train'][-1], "acc_test" : metric_epochs['valid'][-1], 
-                            "loss_test" : loss_epochs['valid'][-1],
-                            "lr_w":lr_w, "sigma":sig})
-                else:
-                    wandb.log({"Epoch":epoch,"loss_train":loss_epochs['train'][-1], 
-                            "acc_train" : metric_epochs['train'][-1], "acc_test" : metric_epochs['valid'][-1], 
-                            "loss_test" : loss_epochs['valid'][-1],"lr_w":lr_w})
+            if self.config.use_wandb:
+
+                lr_w = schedulers[0].get_last_lr()[0] if self.config.scheduler_w != 'none' else self.config.lr_w
+                lr_pos = schedulers[1].get_last_lr()[0] if self.config.scheduler_pos != 'none' else self.config.lr_pos
+
+                wandb_logs = {"Epoch":epoch,
+                              "loss_train":loss_epochs['train'][-1], 
+                              "acc_train" : metric_epochs['train'][-1], 
+                              "loss_test" : loss_epochs['valid'][-1],
+                              "acc_test" : metric_epochs['valid'][-1],
+                              
+                              "lr_w" : lr_w,
+                              "lor_pos" : lr_pos}
+
+                model_logs = self.get_model_wandb_logs()
+
+                wandb_logs.update(model_logs)
+
+                wandb.log(wandb_logs)
+
         
         if self.config.use_wandb:
             wandb.run.finish()   

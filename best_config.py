@@ -6,7 +6,7 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '../Datasets'
+    datasets_path = '/content'
 
     seed = 0
 
@@ -58,17 +58,14 @@ class Config:
     optimizer_pos = 'adam'
 
     lr_w = 1e-3
-    lr_pos = 100*lr_w   if model_type =='snn_delays' else 0
+    lr_pos = 100*lr_w
     
-    # 'one_cycle', 'cosine_a', 'none'
-    scheduler_w = 'one_cycle'    
-    scheduler_pos = 'cosine_a'   if model_type =='snn_delays' else 'none'
-
+    scheduler_w = 'one_cycle'    # 'one_cycle', 'cosine_a'
+    scheduler_pos = 'cosine_a'
 
     # for one cycle
     max_lr_w = 2 * lr_w
     max_lr_pos = 5 * lr_pos
-
 
     # for cosine annealing
     t_max_w = epochs
@@ -89,7 +86,7 @@ class Config:
 
 
     left_padding = max_delay-1
-    right_padding = (max_delay-1) // 4
+    right_padding = (max_delay-1) // 2
 
     init_pos_method = 'uniform'
     init_pos_a = -max_delay//2
@@ -101,8 +98,9 @@ class Config:
     use_wandb = True
 
     wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = f'IMPROV||0.25 padding right||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
+    wandb_run_name = f'IMPROV||Learnable SS||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
 
     wandb_group_name = f"IMPROV {model_type}"
+
 
 
