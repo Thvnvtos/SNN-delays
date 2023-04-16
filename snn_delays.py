@@ -148,15 +148,17 @@ class SnnDelays(Model):
 
 
     def decrease_sig(self, epoch):
-        
+
+        # Decreasing to 1 instead of 0.5, for finetuning
+
         alpha = 0
         sig = self.blocks[-1][0][0].SIG[0,0,0,0].detach().cpu().item()
         if self.config.decrease_sig_method == 'exp':
-            if epoch < self.config.final_epoch and sig > 0.5:
+            if epoch < self.config.final_epoch and sig > 1.0:
                 if self.config.DCLSversion == 'v2':
                     alpha = (1/self.config.sigInit)**(1/(self.config.final_epoch))
                 elif self.config.DCLSversion == 'gauss':
-                    alpha = (0.5/self.config.sigInit)**(1/(self.config.final_epoch))
+                    alpha = (1.0/self.config.sigInit)**(1/(self.config.final_epoch))
 
                 for block in self.blocks:
                     block[0][0].SIG *= alpha

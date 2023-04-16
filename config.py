@@ -13,10 +13,10 @@ class Config:
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'             # 'shd', 'ssc'
 
-    time_step = 20
+    time_step = 10
     n_bins = 10
 
-    epochs = 30
+    epochs = 50
     batch_size = 128
 
     rnoise_sig = 0
@@ -25,9 +25,9 @@ class Config:
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 20.0                      # in ms, can't be < time_step
+    init_tau = 15.0                     # in ms, can't be < time_step
 
-    stateful_synapse_tau = 50.0         # in ms, can't be < time_step
+    stateful_synapse_tau = 15.0         # in ms, can't be < time_step
     stateful_synapse = True
     stateful_synapse_learnable = False
 
@@ -36,12 +36,12 @@ class Config:
     n_hidden_neurons = 128
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.2
+    dropout_p = 0.1
     use_batchnorm = True
-    bias = False
+    bias = True
     detach_reset = True
 
-    loss = 'sum'           # 'mean', 'max', 'spike_count', 'sum
+    loss = 'spike_count'           # 'mean', 'max', 'spike_count', 'sum
     loss_fn = 'CEloss'
     output_v_threshold = 2.0 if loss == 'spike_count' else 1e9  #use 1e9 for loss = 'mean' or 'max'
 
@@ -59,8 +59,8 @@ class Config:
     optimizer_w = 'adam'
     optimizer_pos = 'adam'
 
-    lr_w = 1e-3
-    lr_pos = 200*lr_w   if model_type =='snn_delays' else 0
+    lr_w = 1e-2
+    lr_pos = 50*lr_w   if model_type =='snn_delays' else 0
     
     # 'one_cycle', 'cosine_a', 'none'
     scheduler_w = 'one_cycle'    
@@ -68,8 +68,8 @@ class Config:
 
 
     # for one cycle
-    max_lr_w = 5 * lr_w
-    max_lr_pos = 5 * lr_pos
+    max_lr_w = 2 * lr_w
+    max_lr_pos = 2 * lr_pos
 
 
     # for cosine annealing
@@ -83,28 +83,32 @@ class Config:
     decrease_sig_method = 'exp'
     kernel_count = 1
 
-    max_delay = 250//time_step
+    max_delay = 200//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 4
-    final_epoch = (1*epochs)//2
+    sigInit = max_delay // 2        if model_type == 'snn_delays' else 1.0
+    final_epoch = (1*epochs)//2     if model_type == 'snn_delays' else 0
 
 
     left_padding = max_delay-1
-    right_padding = (max_delay-1) // 3
+    right_padding = (max_delay-1) // 2
 
     init_pos_method = 'uniform'
     init_pos_a = -max_delay//2
     init_pos_b = max_delay//2
 
-    #############################
-    #           Wandb           #
-    #############################
+    #############################################
+    #                      Wandb                #
+    #############################################
     use_wandb = True
+    wandb_project_name = 'Models comparison'
 
-    wandb_project_name = 'SHD-BestACC'
-    wandb_run_name = f'Baseline Tests||Fine-tine Test||{dataset}||{model_type}||{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}||seed={seed}'
 
-    wandb_group_name = f"Baseline Tests {model_type}"
+    run_name = 'Baseline(Pre-train)'
+
+    run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}
+
+    wandb_run_name = run_name + f'||seed={seed}' + run_info
+    wandb_group_name = run_name + run_info
 
 
