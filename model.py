@@ -104,6 +104,29 @@ class Model(nn.Module):
         return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
     
 
+    def fine_tune(self, train_loader, valid_loader, device):
+        
+        self.config.DCLSversion = 'v2'
+        self.config.model_type = 'snn_delays_lr0'
+
+        self.config.lr_w = self.config.lr_w_finetuning
+        self.config.max_lr_w = self.config.max_lr_w_finetuning
+
+        self.config.dropout_p = self.config.dropout_p_finetuning
+        self.config.stateful_synapse_learnable = self.config.stateful_synapse_learnable_finetuning
+        self.config.spiking_neuron_type = self.config.spiking_neuron_type_finetuning
+        self.config.epochs = self.config.epochs_finetuning
+
+        self.config.wandb_run_name = self.config.wandb_run_name_finetuning
+        self.config.wandb_group_name = self.config.wandb_group_name_finetuning
+
+
+        self.__init__(self.config)
+        self.to(device)
+        self.load_state_dict(torch.load(self.config.final_pretrain_model_path), strict=False)
+        self.round_pos()
+
+        self.train_model(train_loader, valid_loader, device)
 
 
 
@@ -228,5 +251,7 @@ class Model(nn.Module):
                 wandb.log(wandb_logs)
 
         
+        torch.save(self.state_dict(), self.config.final_pretrain_model_path)
+
         if self.config.use_wandb:
             wandb.run.finish()   
