@@ -104,7 +104,7 @@ class Model(nn.Module):
         return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
     
 
-    def fine_tune(self, train_loader, valid_loader, device):
+    def fine_tune(self, train_loader, valid_loader, test_loader, device):
         
         self.config.DCLSversion = 'v2'
         self.config.model_type = 'snn_delays_lr0'
@@ -123,14 +123,16 @@ class Model(nn.Module):
 
         self.__init__(self.config)
         self.to(device)
-        self.load_state_dict(torch.load(self.config.final_pretrain_model_path), strict=False)
+        self.load_state_dict(torch.load(self.config.save_model_path), strict=False)
         self.round_pos()
 
-        self.train_model(train_loader, valid_loader, device)
+
+        self.config.save_model_path = self.config.save_model_path_finetuning
+        self.train_model(train_loader, valid_loader, test_loader, device)
 
 
 
-    def train_model(self, train_loader, valid_loader, device):
+    def train_model(self, train_loader, valid_loader, test_loader, device):
         
         ################################################################################################
         #           Main Training Loop for all models
@@ -140,7 +142,7 @@ class Model(nn.Module):
 
 
 
-        ##################################    Initializations    ##############################
+        ##################################    Initializations    #############################
 
         set_seed(self.config.seed)
 
@@ -167,6 +169,7 @@ class Model(nn.Module):
 
         loss_epochs = {'train':[], 'valid':[]}
         metric_epochs = {'train':[], 'valid':[]}
+        best_loss_val = 1e6
         for epoch in range(self.config.epochs):
             self.train()
             #last element in the tuple corresponds to the collate_fn return
@@ -200,34 +203,23 @@ class Model(nn.Module):
 
 
 
-            ##################################    Eval Loop    ##############################
+            ##################################    Eval Loop    #########################
 
-            self.eval()
-            with torch.no_grad():
-                loss_batch, metric_batch = [], []
-                for i, (x, y, _) in enumerate(valid_loader):                    
-                    x = x.permute(1,0,2).float().to(device)
-                    y = y.to(device)
+            
+            loss_valid, metric_valid = self.eval_model(valid_loader, device)
 
-                    output = self.forward(x)
-                
-                    loss = self.calc_loss(output, y)
-                    metric = self.calc_metric(output, y)
-
-                    loss_batch.append(loss.detach().cpu().item())
-                    metric_batch.append(metric)
-
-                    self.reset_model(train=False)
-
-                loss_epochs['valid'].append(np.mean(loss_batch))
-                metric_epochs['valid'].append(np.mean(metric_batch))
+            loss_epochs['valid'].append(loss_valid)
+            metric_epochs['valid'].append(metric_valid)
                 
         
 
-            ##########################      Logging and Plotting ##########################
+            ########################## Logging and Plotting  ##########################
+
+            print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Acc Train = {100*metric_epochs['train'][-1]:.2f}% \nLoss Valid = {loss_epochs['valid'][-1]:.3f}  |  Acc Valid = {100*metric_epochs['valid'][-1]:.2f}%")
 
 
-            print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Best Acc Train = {100*max(metric_epochs['train']):.2f}% \nLoss Test = {loss_epochs['valid'][-1]:.3f}  |  Best Acc Test = {100*max(metric_epochs['valid']):.2f}%")
+            loss_test, acc_test = self.eval_model(test_loader, device)
+            print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
 
 
             if self.config.use_wandb:
@@ -238,9 +230,11 @@ class Model(nn.Module):
                 wandb_logs = {"Epoch":epoch,
                               "loss_train":loss_epochs['train'][-1], 
                               "acc_train" : metric_epochs['train'][-1], 
-                              "loss_test" : loss_epochs['valid'][-1],
-                              "acc_test" : metric_epochs['valid'][-1],
-                              
+                              "loss_valid" : loss_epochs['valid'][-1],
+                              "acc_valid" : metric_epochs['valid'][-1],
+                              "loss_test" : loss_test,
+                              "acc_test"  : acc_test,
+
                               "lr_w" : lr_w,
                               "lr_pos" : lr_pos}
 
@@ -250,8 +244,35 @@ class Model(nn.Module):
 
                 wandb.log(wandb_logs)
 
-        
-        torch.save(self.state_dict(), self.config.final_pretrain_model_path)
+
+            if  loss_valid < best_loss_val  and (self.config.model_type != 'snn_delays' or wandb_logs['sigma'] <= 0.5 + 1e-6):
+                print("# Saving best model...")
+                torch.save(self.state_dict(), self.config.save_model_path)
+                best_loss_val = loss_valid
+
+
 
         if self.config.use_wandb:
             wandb.run.finish()   
+    
+
+
+    def eval_model(self, loader, device):
+        self.eval()
+        with torch.no_grad():
+            loss_batch, metric_batch = [], []
+            for i, (x, y, _) in enumerate(loader):                    
+                x = x.permute(1,0,2).float().to(device)
+                y = y.to(device)
+
+                output = self.forward(x)
+                
+                loss = self.calc_loss(output, y)
+                metric = self.calc_metric(output, y)
+
+                loss_batch.append(loss.detach().cpu().item())
+                metric_batch.append(metric)
+
+                self.reset_model(train=False)
+        
+        return np.mean(loss_batch), np.mean(metric_batch)

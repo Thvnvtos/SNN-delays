@@ -3,6 +3,7 @@ from utils import set_seed
 import numpy as np
 
 from torch.utils.data import DataLoader
+from torch.utils.data import random_split
 
 from spikingjelly.datasets.shd import SpikingHeidelbergDigits
 from spikingjelly.datasets.shd import SpikingSpeechCommands
@@ -27,11 +28,13 @@ def SHD_dataloaders(config):
   train_dataset = SpikingHeidelbergDigits(config.datasets_path, config.n_bins, train=True, data_type='frame', duration=config.time_step, transform=RNoise(config.rnoise_sig))
   test_dataset= SpikingHeidelbergDigits(config.datasets_path, config.n_bins, train=False, data_type='frame', duration=config.time_step)
 
+  train_dataset, valid_dataset = random_split(train_dataset, [0.8, 0.2])
 
   train_loader = DataLoader(train_dataset, collate_fn=pad_sequence_collate, batch_size=config.batch_size, shuffle=True)
+  valid_loader = DataLoader(valid_dataset, collate_fn=pad_sequence_collate, batch_size=config.batch_size)
   test_loader = DataLoader(test_dataset, collate_fn=pad_sequence_collate, batch_size=config.batch_size)
 
-  return train_loader, test_loader
+  return train_loader, valid_loader, test_loader
 
 
 

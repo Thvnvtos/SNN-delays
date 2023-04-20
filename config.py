@@ -6,7 +6,7 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '../Datasets/SHD'#'/content'
+    datasets_path = '../Datasets/SHD' #'/content'
 
     seed = 0
 
@@ -25,15 +25,15 @@ class Config:
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 10.0                     # in ms, can't be < time_step
+    init_tau = 12.5                     # in ms, can't be < time_step
 
-    stateful_synapse_tau = 10.0         # in ms, can't be < time_step
+    stateful_synapse_tau = 12.5         # in ms, can't be < time_step
     stateful_synapse = True
     stateful_synapse_learnable = False
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 256
+    n_hidden_neurons = 128
     n_outputs = 20 if dataset == 'shd' else 35
     
     dropout_p = 0.25
@@ -117,7 +117,7 @@ class Config:
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)Testing_code'
+    run_name = '(Pre-train)Baseline'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
@@ -125,9 +125,13 @@ class Config:
     wandb_group_name = run_name + run_info
 
 
-    final_pretrain_model_path = f'{wandb_run_name}.pt' #f'/content/drive/MyDrive/{wandb_run_name}.pt'
+    save_model_path = f'{wandb_run_name}.pt' #f'/content/drive/MyDrive/{wandb_run_name}.pt'
+
 
     wandb_run_name_finetuning = wandb_run_name.replace('(Pre-train)', 
                                        f'(Fine-tune_lr={lr_w_finetuning:.1e}->{max_lr_w_finetuning:.1e}_dropout={dropout_p_finetuning}_{spiking_neuron_type_finetuning}_SS={stateful_synapse_learnable_finetuning})')
-
     wandb_group_name_finetuning = wandb_group_name.replace('(Pre-train)', '(Fine-tune)')
+
+    save_model_path_finetuning = f'{wandb_run_name_finetuning}.pt' #f'/content/drive/MyDrive/{wandb_run_name_finetuning}.pt'
+
+    
