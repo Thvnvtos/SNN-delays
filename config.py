@@ -13,27 +13,26 @@ class Config:
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'                    # 'shd', 'ssc'
 
-    time_step = 10
-    n_bins = 5
+    time_step = 25
+    n_bins = 10
 
     epochs = 50
-    batch_size = 128
+    batch_size = 64
 
-    rnoise_sig = 0
 
     ################################################
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 12.5                     # in ms, can't be < time_step
+    init_tau = 25.0                    # in ms, can't be < time_step
 
-    stateful_synapse_tau = 12.5         # in ms, can't be < time_step
+    stateful_synapse_tau = 25.0        # in ms, can't be < time_step
     stateful_synapse = True
     stateful_synapse_learnable = False
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 128
+    n_hidden_neurons = 64
     n_outputs = 20 if dataset == 'shd' else 35
     
     dropout_p = 0.25
@@ -110,10 +109,23 @@ class Config:
     epochs_finetuning = 25
 
 
+    ################################################
+    #               Data-Augmentation              #
+    ################################################
+
+    augment = True
+
+    rnoise_sig = 0
+
+    TN_mask_aug_proba = 0.7
+    time_mask_size = max_delay
+    freq_mask_size = n_inputs//2
+
+
     #############################################
     #                      Wandb                #
     #############################################
-    use_wandb = True
+    use_wandb = False
     wandb_project_name = 'Models comparison'
 
 

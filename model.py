@@ -6,6 +6,7 @@ import torch.optim as optim
 
 from config import Config
 from utils import set_seed
+from datasets import Augs
 
 
 class Model(nn.Module):
@@ -104,8 +105,11 @@ class Model(nn.Module):
         return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
     
 
+
     def fine_tune(self, train_loader, valid_loader, test_loader, device):
         
+        #if self.config.spiking_neuron_type == 'plif' and self.config.spiking_neuron_type_finetuning == 'lif':
+
         self.config.DCLSversion = 'v2'
         self.config.model_type = 'snn_delays_lr0'
 
@@ -162,7 +166,7 @@ class Model(nn.Module):
         optimizers = self.optimizers()
         schedulers = self.schedulers(optimizers)
 
-
+        augmentations = Augs(self.config)
 
         ##################################    Train Loop    ##############################
 
@@ -175,8 +179,12 @@ class Model(nn.Module):
             #last element in the tuple corresponds to the collate_fn return
             loss_batch, metric_batch = [], []
             for i, (x, y, _) in enumerate(train_loader):
-                # x for shd and ssc is: (batch, neurons, time)
-                x = x.permute(1,0,2).float().to(device)
+                # x for shd and ssc is: (batch, time, neurons)
+
+                if self.config.augment:
+                    x = augmentations(x)
+
+                x = x.permute(1,0,2).float().to(device)  #(time, batch, neurons)
                 y = y.to(device)
 
                 for opt in optimizers: opt.zero_grad()
@@ -245,7 +253,7 @@ class Model(nn.Module):
                 wandb.log(wandb_logs)
 
 
-            if  loss_valid < best_loss_val  and (self.config.model_type != 'snn_delays' or wandb_logs['sigma'] <= 0.5 + 1e-6):
+            if  loss_valid < best_loss_val  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
                 print("# Saving best model...")
                 torch.save(self.state_dict(), self.config.save_model_path)
                 best_loss_val = loss_valid
