@@ -3,6 +3,7 @@ import wandb
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 
 from config import Config
 from utils import set_seed
@@ -85,11 +86,16 @@ class Model(nn.Module):
         # probably better to add it in init, or in general do it one time only
         if self.config.loss_fn == 'CEloss':
             #compare using this to directly using nn.CrossEntropyLoss
-            log_softmax_fn = nn.LogSoftmax(dim=1) 
-            loss_fn = nn.NLLLoss()
 
-            log_p_y = log_softmax_fn(m) 
-            return loss_fn(log_p_y, y)
+            CEloss = nn.CrossEntropyLoss()
+            loss = CEloss(m, y)
+            
+            #log_softmax_fn = nn.LogSoftmax(dim=1) 
+            #loss_fn = nn.NLLLoss()
+            #log_p_y = log_softmax_fn(m)
+            #loss = loss_fn(log_p_y, y)
+
+            return loss
         
 
 
@@ -102,7 +108,7 @@ class Model(nn.Module):
             softmax_fn = nn.Softmax(dim=2) 
             m = torch.sum(softmax_fn(output), 0)
 
-        return np.mean((y==torch.max(m,1)[1]).detach().cpu().numpy())
+        return np.mean((torch.max(y,1)[1]==torch.max(m,1)[1]).detach().cpu().numpy())
     
 
 
@@ -181,8 +187,10 @@ class Model(nn.Module):
             for i, (x, y, _) in enumerate(train_loader):
                 # x for shd and ssc is: (batch, time, neurons)
 
+                y = F.one_hot(y, self.config.n_outputs).float()
+
                 if self.config.augment:
-                    x = augmentations(x)
+                    x, y = augmentations(x, y)
 
                 x = x.permute(1,0,2).float().to(device)  #(time, batch, neurons)
                 y = y.to(device)
@@ -269,7 +277,10 @@ class Model(nn.Module):
         self.eval()
         with torch.no_grad():
             loss_batch, metric_batch = [], []
-            for i, (x, y, _) in enumerate(loader):                    
+            for i, (x, y, _) in enumerate(loader):     
+
+                y = F.one_hot(y, self.config.n_outputs).float()
+
                 x = x.permute(1,0,2).float().to(device)
                 y = y.to(device)
 

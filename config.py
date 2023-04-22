@@ -35,7 +35,7 @@ class Config:
     n_hidden_neurons = 64
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.25
+    dropout_p = 0.1
     use_batchnorm = True
     bias = False
     detach_reset = True
@@ -103,7 +103,7 @@ class Config:
     lr_w_finetuning = 1e-4
     max_lr_w_finetuning = 1.5 * lr_w_finetuning
 
-    dropout_p_finetuning = 0.5
+    dropout_p_finetuning = 0
     stateful_synapse_learnable_finetuning = False
     spiking_neuron_type_finetuning = 'lif'
     epochs_finetuning = 25
@@ -117,9 +117,11 @@ class Config:
 
     rnoise_sig = 0
 
-    TN_mask_aug_proba = 0.7
-    time_mask_size = max_delay
-    freq_mask_size = n_inputs//2
+    TN_mask_aug_proba = 0.5
+    time_mask_size = max_delay // 2
+    neuron_mask_size = n_inputs // 4
+
+    cutmix_aug_proba = 0.5
 
 
     #############################################

@@ -4,6 +4,7 @@ import numpy as np
 
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
+
 import torchvision.transforms as transforms
 
 from spikingjelly.datasets.shd import SpikingHeidelbergDigits
@@ -18,7 +19,6 @@ class RNoise(object):
     self.sig = sig
         
   def __call__(self, sample):
-    print("Called")
     noise = np.abs(np.random.normal(0, self.sig, size=sample.shape).round())
     return sample + noise
 
@@ -28,34 +28,70 @@ class TimeNeurons_mask_aug(object):
   def __init__(self, config):
     self.config = config
   
-  def __call__(self, sample):
-    # Time mask
-    if np.random.uniform() < self.config.TN_mask_aug_proba:
-      mask_size = np.random.randint(0, self.config.time_mask_size)
-      ind = np.random.randint(0, sample.shape[0])
-      sample[ind:ind+mask_size, :] = 0
+  
+  def __call__(self, x, y):
+    # Sample shape: (time, neurons)
+    for sample in x:
+      # Time mask
+      if np.random.uniform() < self.config.TN_mask_aug_proba:
+        mask_size = np.random.randint(0, self.config.time_mask_size)
+        ind = np.random.randint(0, sample.shape[0] - self.config.time_mask_size)
+        sample[ind:ind+mask_size, :] = 0
 
-    # Freq mask
-    if np.random.uniform() < self.config.TN_mask_aug_proba:
-      mask_size = np.random.randint(0, self.config.freq_mask_size)
-      ind = np.random.randint(0, sample.shape[1])
-      sample[:, ind:ind+mask_size] = 0
+      # Neuron mask
+      if np.random.uniform() < self.config.TN_mask_aug_proba:
+        mask_size = np.random.randint(0, self.config.neuron_mask_size)
+        ind = np.random.randint(0, sample.shape[1] - self.config.neuron_mask_size)
+        sample[:, ind:ind+mask_size] = 0
 
-    return sample
+    return x, y
+
+
+class CutMix(object):
+  """
+  Apply Spectrogram-CutMix augmentaiton which only cuts patch across time axis unlike 
+  typical Computer-Vision CutMix. Applies CutMix to one batch and its shifted version.
+    
+  """
+
+  def __init__(self, config):
+    self.config = config
+  
+  
+  def __call__(self, x, y):
+    
+    # x shape: (batch, time, neurons)
+    # Go to L-1, no need to augment last sample in batch (for ease of coding)
+
+    for i in range(x.shape[0]-1):
+      # other sample to cut from
+      j = i+1
+      
+      if np.random.uniform() < self.config.cutmix_aug_proba:
+        lam = np.random.uniform()
+        cut_size = int(lam * x[j].shape[0])
+
+        ind = np.random.randint(0, x[i].shape[0] - cut_size)
+
+        x[i][ind:ind+cut_size, :] = x[j][ind:ind+cut_size, :]
+
+        y[i] = (1-lam) * y[i] + lam * y[j]
+
+    return x, y
+
 
 
 class Augs(object):
 
   def __init__(self, config):
     self.config = config
-    self.augs = [TimeNeurons_mask_aug(config)]
+    self.augs = [TimeNeurons_mask_aug(config), CutMix(config)]
   
-  def __call__(self, batch):
-    for sample in batch:
-      for aug in self.augs:
-        sample = aug(sample)
+  def __call__(self, x, y):
+    for aug in self.augs:
+      x, y = aug(x, y)
     
-    return batch
+    return x, y
 
 
 

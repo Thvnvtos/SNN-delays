@@ -240,4 +240,4 @@ class SnnDelays(Model):
         with torch.no_grad():
             for i in range(len(self.blocks)):
                 self.blocks[i][0][0].P.round_()
-                self.blocks.clamp_parameters()
+                self.blocks[i][0][0].clamp_parameters()
