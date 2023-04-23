@@ -85,7 +85,7 @@ class Config:
     max_delay = 300//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 3        if model_type == 'snn_delays' else 1.0
+    sigInit = max_delay // 3        if model_type == 'snn_delays' else 0.5
     final_epoch = (1*epochs)//2     if model_type == 'snn_delays' else 0
 
 
