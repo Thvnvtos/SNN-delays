@@ -191,6 +191,10 @@ class SnnDelays(Model):
             spikes = self.blocks[block_id][1][0](x)
             # we use dropout on generated spikes tensor
             x = self.blocks[block_id][1][1](spikes)
+
+            # we apply synapse filter
+            if self.config.stateful_synapse:
+                x = self.blocks[block_id][1][2](x)
             
             # x is back to shape (time, batch, neurons)
         
