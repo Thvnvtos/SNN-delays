@@ -116,7 +116,7 @@ class Model(nn.Module):
         
         #if self.config.spiking_neuron_type == 'plif' and self.config.spiking_neuron_type_finetuning == 'lif':
 
-        self.config.DCLSversion = 'v2'
+        self.config.DCLSversion = 'max'
         self.config.model_type = 'snn_delays_lr0'
 
         self.config.lr_w = self.config.lr_w_finetuning
@@ -126,6 +126,8 @@ class Model(nn.Module):
         self.config.stateful_synapse_learnable = self.config.stateful_synapse_learnable_finetuning
         self.config.spiking_neuron_type = self.config.spiking_neuron_type_finetuning
         self.config.epochs = self.config.epochs_finetuning
+        
+        self.config.final_epoch = 0
 
         self.config.wandb_run_name = self.config.wandb_run_name_finetuning
         self.config.wandb_group_name = self.config.wandb_group_name_finetuning
@@ -134,6 +136,10 @@ class Model(nn.Module):
         self.__init__(self.config)
         self.to(device)
         self.load_state_dict(torch.load(self.config.save_model_path), strict=False)
+
+        for i in range(len(self.blocks)):
+            self.blocks[i][0][0].SIG *= 0 
+
         self.round_pos()
 
 
@@ -144,7 +150,7 @@ class Model(nn.Module):
 
     def train_model(self, train_loader, valid_loader, test_loader, device):
         
-        ################################################################################################
+        #######################################################################################
         #           Main Training Loop for all models
         #
         #
@@ -234,8 +240,8 @@ class Model(nn.Module):
             print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Acc Train = {100*metric_epochs['train'][-1]:.2f}% \nLoss Valid = {loss_epochs['valid'][-1]:.3f}  |  Acc Valid = {100*metric_epochs['valid'][-1]:.2f}%")
 
 
-            loss_test, acc_test = self.eval_model(test_loader, device)
-            print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
+            #loss_test, acc_test = self.eval_model(test_loader, device)
+            #print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
 
 
             if self.config.use_wandb:
@@ -248,8 +254,8 @@ class Model(nn.Module):
                               "acc_train" : metric_epochs['train'][-1], 
                               "loss_valid" : loss_epochs['valid'][-1],
                               "acc_valid" : metric_epochs['valid'][-1],
-                              "loss_test" : loss_test,
-                              "acc_test"  : acc_test,
+                              #"loss_test" : loss_test,
+                              #"acc_test"  : acc_test,
 
                               "lr_w" : lr_w,
                               "lr_pos" : lr_pos}

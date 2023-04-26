@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from spikingjelly.activation_based import neuron, layer
 from spikingjelly.activation_based import functional
 
-from DCLG.Conv import GDcls1d
+from DCLG.Conv import Dcls1d
 
 from model import Model
 from utils import set_seed
@@ -29,7 +29,7 @@ class SnnDelays(Model):
 
         ################################################   First Layer    #######################################################
 
-        self.blocks = [[[GDcls1d(self.config.n_inputs, self.config.n_hidden_neurons, kernel_count=self.config.kernel_count, groups = 1, 
+        self.blocks = [[[Dcls1d(self.config.n_inputs, self.config.n_hidden_neurons, kernel_count=self.config.kernel_count, groups = 1, 
                                 dilated_kernel_size = self.config.max_delay, bias=self.config.bias, version=self.config.DCLSversion)],
                        
                         [layer.Dropout(self.config.dropout_p, step_mode='m')]]]
@@ -54,7 +54,7 @@ class SnnDelays(Model):
         ################################################   Hidden Layers    #######################################################
 
         for i in range(self.config.n_hidden_layers-1):
-            self.block = [[GDcls1d(self.config.n_hidden_neurons, self.config.n_hidden_neurons, kernel_count=self.config.kernel_count, groups = 1, 
+            self.block = [[Dcls1d(self.config.n_hidden_neurons, self.config.n_hidden_neurons, kernel_count=self.config.kernel_count, groups = 1, 
                                 dilated_kernel_size = self.config.max_delay, bias=self.config.bias, version=self.config.DCLSversion)],
                        
                             [layer.Dropout(self.config.dropout_p, step_mode='m')]]
@@ -79,7 +79,7 @@ class SnnDelays(Model):
         ################################################   Final Layer    #######################################################
 
 
-        self.final_block = [[GDcls1d(self.config.n_hidden_neurons, self.config.n_outputs, kernel_count=self.config.kernel_count, groups = 1, 
+        self.final_block = [[Dcls1d(self.config.n_hidden_neurons, self.config.n_outputs, kernel_count=self.config.kernel_count, groups = 1, 
                                      dilated_kernel_size = self.config.max_delay, bias=self.config.bias, version=self.config.DCLSversion)]]
         if self.config.spiking_neuron_type == 'lif':
             self.final_block.append([neuron.LIFNode(tau=self.config.init_tau, v_threshold=self.config.output_v_threshold, 
@@ -138,7 +138,7 @@ class SnnDelays(Model):
     def reset_model(self, train=True):
         functional.reset_net(self)
 
-        # We use clamp_parameters of the GDcls1d modules
+        # We use clamp_parameters of the Dcls1d modules
         if train: 
             for block in self.blocks:
                 block[0][0].clamp_parameters()
@@ -149,20 +149,22 @@ class SnnDelays(Model):
 
     def decrease_sig(self, epoch):
 
-        # Decreasing to 1 instead of 0.5, for finetuning
+        # Decreasing to 0.23 instead of 0.5
 
         alpha = 0
         sig = self.blocks[-1][0][0].SIG[0,0,0,0].detach().cpu().item()
         if self.config.decrease_sig_method == 'exp':
-            if epoch < self.config.final_epoch and sig > 0.5:
-                if self.config.DCLSversion == 'v2':
+            if epoch < self.config.final_epoch and sig > 0.23:
+                if self.config.DCLSversion == 'max':
+                    # You have to change this !!
                     alpha = (1/self.config.sigInit)**(1/(self.config.final_epoch))
                 elif self.config.DCLSversion == 'gauss':
-                    alpha = (0.5/self.config.sigInit)**(1/(self.config.final_epoch))
+                    alpha = (0.23/self.config.sigInit)**(1/(self.config.final_epoch))
 
                 for block in self.blocks:
                     block[0][0].SIG *= alpha
-                    block[0][0].clamp_parameters()
+                    # No need to clamp after modifying sigma
+                    #block[0][0].clamp_parameters()
 
 
 
@@ -212,7 +214,7 @@ class SnnDelays(Model):
         if self.config.loss != 'spike_count':
             out = self.blocks[-1][1][0].v_seq
 
-        return out
+        return out#, self.blocks[0][1][0].v_seq
     
 
 

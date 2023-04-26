@@ -10,32 +10,32 @@ class Config:
 
     seed = 0
 
-    model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
+    model_type = 'snn_delays_lr0'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'                    # 'shd', 'ssc'
 
-    time_step = 25
-    n_bins = 10
+    time_step = 20
+    n_bins = 25
 
-    epochs = 50
-    batch_size = 64
+    epochs = 10
+    batch_size = 32
 
 
     ################################################
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 25.0                    # in ms, can't be < time_step
+    init_tau = 20.0                    # in ms, can't be < time_step
 
-    stateful_synapse_tau = 25.0        # in ms, can't be < time_step
-    stateful_synapse = True
+    stateful_synapse_tau = 20.0        # in ms, can't be < time_step
+    stateful_synapse = False
     stateful_synapse_learnable = False
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 64
+    n_hidden_neurons = 8
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.1
+    dropout_p = 0.4
     use_batchnorm = True
     bias = False
     detach_reset = True
@@ -78,14 +78,14 @@ class Config:
     ################################################
     #                    Delays                    #
     ################################################
-    DCLSversion = 'gauss'
+    DCLSversion = 'max'
     decrease_sig_method = 'exp'
     kernel_count = 1
 
-    max_delay = 300//time_step
+    max_delay = 200//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 3        if model_type == 'snn_delays' else 0.5
+    sigInit = max_delay // 3        if model_type == 'snn_delays' else 0.23 * int(DCLSversion == 'gauss')
     final_epoch = (1*epochs)//2     if model_type == 'snn_delays' else 0
 
 
@@ -100,26 +100,26 @@ class Config:
     #                 Fine-tuning                  #
     ################################################
     
-    lr_w_finetuning = 1e-4
+    lr_w_finetuning = 1e-3
     max_lr_w_finetuning = 1.5 * lr_w_finetuning
 
-    dropout_p_finetuning = 0
+    dropout_p_finetuning = 0.4
     stateful_synapse_learnable_finetuning = False
     spiking_neuron_type_finetuning = 'lif'
-    epochs_finetuning = 25
+    epochs_finetuning = 30
 
 
     ################################################
     #               Data-Augmentation              #
     ################################################
 
-    augment = True
+    augment = False
 
     rnoise_sig = 0
 
-    TN_mask_aug_proba = 0.5
-    time_mask_size = max_delay // 2
-    neuron_mask_size = n_inputs // 4
+    TN_mask_aug_proba = 0.65
+    time_mask_size = max_delay//3
+    neuron_mask_size = n_inputs//5
 
     cutmix_aug_proba = 0.5
 
@@ -127,11 +127,11 @@ class Config:
     #############################################
     #                      Wandb                #
     #############################################
-    use_wandb = False
+    use_wandb = True
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)Baseline'
+    run_name = '(Pre-train)CodeTest|'#'(Pre-train)Baseline|Dsig'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
@@ -139,13 +139,13 @@ class Config:
     wandb_group_name = run_name + run_info
 
 
-    save_model_path = f'{wandb_run_name}.pt' #f'/content/drive/MyDrive/{wandb_run_name}.pt'
+    save_model_path = f'{wandb_run_name}.pt'#f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name}.pt'
 
 
     wandb_run_name_finetuning = wandb_run_name.replace('(Pre-train)', 
                                        f'(Fine-tune_lr={lr_w_finetuning:.1e}->{max_lr_w_finetuning:.1e}_dropout={dropout_p_finetuning}_{spiking_neuron_type_finetuning}_SS={stateful_synapse_learnable_finetuning})')
     wandb_group_name_finetuning = wandb_group_name.replace('(Pre-train)', '(Fine-tune)')
 
-    save_model_path_finetuning = f'{wandb_run_name_finetuning}.pt' #f'/content/drive/MyDrive/{wandb_run_name_finetuning}.pt'
+    save_model_path_finetuning = f'{wandb_run_name_finetuning}.pt'#f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name_finetuning}.pt'
 
     
