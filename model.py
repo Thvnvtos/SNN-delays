@@ -27,7 +27,7 @@ class Model(nn.Module):
         ##################################
         optimizers_return = []
         
-        if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
+        if self.config.model_type in ['snn_delays', 'snn_delays_lr0', 'snn']:
             if self.config.optimizer_w == 'adam':
                 optimizers_return.append(optim.Adam(self.weights, lr = self.config.lr_w, betas=(0.9,0.999)))
             if self.config.model_type == 'snn_delays':
@@ -49,7 +49,7 @@ class Model(nn.Module):
         ##################################
         schedulers_return = []
         
-        if self.config.model_type in ['snn_delays', 'snn_delays_lr0']:
+        if self.config.model_type in ['snn_delays', 'snn_delays_lr0','snn']:
             if self.config.scheduler_w == 'one_cycle':
                 schedulers_return.append(torch.optim.lr_scheduler.OneCycleLR(optimizers[0], max_lr=self.config.max_lr_w,
                                                                              total_steps=self.config.epochs))
@@ -155,9 +155,6 @@ class Model(nn.Module):
         #
         #
         #
-
-
-
         ##################################    Initializations    #############################
 
         set_seed(self.config.seed)

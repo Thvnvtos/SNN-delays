@@ -10,14 +10,14 @@ class Config:
 
     seed = 0
 
-    model_type = 'snn_delays_lr0'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
-    dataset = 'shd'                    # 'shd', 'ssc'
+    model_type = 'snn'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
+    dataset = 'shd'                        # 'shd', 'ssc'
 
-    time_step = 20
-    n_bins = 25
+    time_step = 10
+    n_bins = 5
 
-    epochs = 10
-    batch_size = 32
+    epochs = 50
+    batch_size = 128
 
 
     ################################################
@@ -32,10 +32,10 @@ class Config:
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 8
+    n_hidden_neurons = 256
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.4
+    dropout_p = 0.3
     use_batchnorm = True
     bias = False
     detach_reset = True
@@ -131,7 +131,7 @@ class Config:
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)CodeTest|'#'(Pre-train)Baseline|Dsig'
+    run_name = '(Pre-train)CodeTest|SNN'#'(Pre-train)Baseline|Dsig'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
