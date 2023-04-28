@@ -6,7 +6,7 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '.'
+    datasets_path = '/kaggle/working/'
 
     seed = 0
 
@@ -141,13 +141,13 @@ class Config:
     wandb_group_name = run_name + run_info
 
 
-    save_model_path = f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name}.pt'
+    save_model_path = f'/kaggle/working/{wandb_run_name}.pt'
 
 
     wandb_run_name_finetuning = wandb_run_name.replace('(Pre-train)', 
                                        f'(Fine-tune_lr={lr_w_finetuning:.1e}->{max_lr_w_finetuning:.1e}_dropout={dropout_p_finetuning}_{spiking_neuron_type_finetuning}_SS={stateful_synapse_learnable_finetuning})')
     wandb_group_name_finetuning = wandb_group_name.replace('(Pre-train)', '(Fine-tune)')
 
-    save_model_path_finetuning = f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name_finetuning}.pt'
+    save_model_path_finetuning = f'/kaggle/working/{wandb_run_name_finetuning}.pt'
 
     
