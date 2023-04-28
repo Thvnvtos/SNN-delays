@@ -58,6 +58,8 @@ class Config:
     optimizer_w = 'adam'
     optimizer_pos = 'adam'
 
+    weight_decay = 1e-4
+
     lr_w = 1e-3
     lr_pos = 150*lr_w   if model_type =='snn_delays' else 0
     

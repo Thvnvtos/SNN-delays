@@ -32,10 +32,11 @@ class Model(nn.Module):
         
         if self.config.model_type in ['snn_delays', 'snn_delays_lr0', 'snn']:
             if self.config.optimizer_w == 'adam':
-                optimizers_return.append(optim.Adam(self.weights, lr = self.config.lr_w, betas=(0.9,0.999)))
+                optimizers_return.append(optim.Adam([{'params':self.weights + self.weights_plif, 'lr':self.config.lr_w, 'weight_decay':self.config.weight_decay},
+                                                     {'params':self.weights_bn, 'lr':self.config.lr_w, 'weight_decay':0}]))
             if self.config.model_type == 'snn_delays':
                 if self.config.optimizer_pos == 'adam':
-                    optimizers_return.append(optim.Adam(self.positions, lr = self.config.lr_pos, betas=(0.9,0.999)))
+                    optimizers_return.append(optim.Adam(self.positions, lr = self.config.lr_pos, weight_decay=0))
         elif self.config.model_type == 'ann':
             if self.config.optimizer_w == 'adam':
                 optimizers_return.append(optim.Adam(self.model.parameters(), lr = self.config.lr_w, betas=(0.9,0.999)))

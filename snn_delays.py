@@ -98,12 +98,19 @@ class SnnDelays(Model):
         self.model = nn.Sequential(*self.model)
         #print(self.model)
 
-        self.weights, self.positions = [], []
-        for name, param in self.named_parameters():
-            if 'P' in name:     self.positions.append(param)
-            else:               self.weights.append(param)
-
-
+        self.positions = []
+        self.weights = []
+        self.weights_bn = []
+        self.weights_plif = []
+        for m in self.model.modules():
+            if isinstance(m, Dcls1d):
+                self.positions.append(m.P)
+                self.weights.append(m.weight)
+            elif isinstance(m, layer.BatchNorm1d):
+                self.weights_bn.append(m.weight)
+                self.weights_bn.append(m.bias)
+            elif isinstance(m, neuron.ParametricLIFNode):
+                self.weights_plif.append(m.w)
 
 
 
