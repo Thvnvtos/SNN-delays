@@ -6,9 +6,9 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '/content'
+    datasets_path = '.'
 
-    seed = 1
+    seed = 0
 
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'                    # 'shd', 'ssc'
@@ -35,7 +35,7 @@ class Config:
     n_hidden_neurons = 256
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.3
+    dropout_p = 0.4
     use_batchnorm = True
     bias = False
     detach_reset = True
@@ -58,10 +58,10 @@ class Config:
     optimizer_w = 'adam'
     optimizer_pos = 'adam'
 
-    weight_decay = 5e-5
+    weight_decay = 1e-5
 
     lr_w = 1e-3
-    lr_pos = 70*lr_w   if model_type =='snn_delays' else 0
+    lr_pos = 100*lr_w   if model_type =='snn_delays' else 0
     
     # 'one_cycle', 'cosine_a', 'none'
     scheduler_w = 'one_cycle'    
@@ -69,7 +69,7 @@ class Config:
 
 
     # for one cycle
-    max_lr_w = 4 * lr_w
+    max_lr_w = 3 * lr_w
     max_lr_pos = 5 * lr_pos
 
 
@@ -87,7 +87,7 @@ class Config:
     max_delay = 200//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 3        if model_type == 'snn_delays' else 0.5
+    sigInit = max_delay // 2        if model_type == 'snn_delays' else 0.5
     final_epoch = (1*epochs)//2     if model_type == 'snn_delays' else 0
 
 
@@ -129,11 +129,11 @@ class Config:
     #############################################
     #                      Wandb                #
     #############################################
-    use_wandb = True
+    use_wandb = False
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)SOTA|Dsig_Baseline'
+    run_name = '(Pre-train)SOTA|Dsig_(1e-3, 100x)_maxlr(3x)_wd(1e-5)_drop(0.4)'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
