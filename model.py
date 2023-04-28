@@ -336,10 +336,12 @@ class Model(nn.Module):
                 metric_batch.append(metric)
 
                 self.reset_model(train=False)
+
+            if self.config.DCLSversion == 'gauss':
+                for i in range(len(self.blocks)):
+                    self.blocks[i][0][0].version = 'gauss'
+                    self.blocks[i][0][0].DCK.version = 'gauss'
             
-            for i in range(len(self.blocks)):
-                self.blocks[i][0][0].version = 'gauss'
-                self.blocks[i][0][0].DCK.version = 'gauss'
             self.load_state_dict(torch.load('temp.pt'), strict=True)
 
         return np.mean(loss_batch), np.mean(metric_batch)
