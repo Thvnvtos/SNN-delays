@@ -186,7 +186,7 @@ class Model(nn.Module):
 
         loss_epochs = {'train':[], 'valid':[]}
         metric_epochs = {'train':[], 'valid':[]}
-        best_loss_val = 1e6 
+        best_metric_val = 0 #1e6 
         
         pre_pos_epoch = self.init_pos.copy()
         pre_pos_5epochs = self.init_pos.copy()
@@ -296,10 +296,10 @@ class Model(nn.Module):
                 wandb.log(wandb_logs)
 
 
-            if  loss_valid < best_loss_val  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
+            if  metric_valid > best_metric_val  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
                 print("# Saving best model...")
                 torch.save(self.state_dict(), self.config.save_model_path)
-                best_loss_val = loss_valid
+                best_metric_val = metric_valid
 
 
 
