@@ -6,12 +6,12 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '../Datasets/SHD' #'/content'
+    datasets_path = '/content'
 
-    seed = 0
+    seed = 1
 
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
-    dataset = 'shd'                        # 'shd', 'ssc'
+    dataset = 'shd'                    # 'shd', 'ssc'
 
     time_step = 10
     n_bins = 5
@@ -58,10 +58,10 @@ class Config:
     optimizer_w = 'adam'
     optimizer_pos = 'adam'
 
-    weight_decay = 1e-4
+    weight_decay = 5e-5
 
     lr_w = 1e-3
-    lr_pos = 150*lr_w   if model_type =='snn_delays' else 0
+    lr_pos = 70*lr_w   if model_type =='snn_delays' else 0
     
     # 'one_cycle', 'cosine_a', 'none'
     scheduler_w = 'one_cycle'    
@@ -69,7 +69,7 @@ class Config:
 
 
     # for one cycle
-    max_lr_w = 2 * lr_w
+    max_lr_w = 4 * lr_w
     max_lr_pos = 5 * lr_pos
 
 
@@ -87,7 +87,7 @@ class Config:
     max_delay = 200//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 3        if model_type == 'snn_delays' else 0.23 * int(DCLSversion == 'gauss')
+    sigInit = max_delay // 3        if model_type == 'snn_delays' else 0.5
     final_epoch = (1*epochs)//2     if model_type == 'snn_delays' else 0
 
 
@@ -102,10 +102,10 @@ class Config:
     #                 Fine-tuning                  #
     ################################################
     
-    lr_w_finetuning = 1e-3
-    max_lr_w_finetuning = 1.5 * lr_w_finetuning
+    lr_w_finetuning = 1e-4
+    max_lr_w_finetuning = 1.2 * lr_w_finetuning
 
-    dropout_p_finetuning = 0.4
+    dropout_p_finetuning = 0
     stateful_synapse_learnable_finetuning = False
     spiking_neuron_type_finetuning = 'lif'
     epochs_finetuning = 30
@@ -133,7 +133,7 @@ class Config:
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)Dpos_Test|SNN'#'(Pre-train)Baseline|Dsig'
+    run_name = '(Pre-train)SOTA|Dsig_Baseline'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
@@ -141,13 +141,13 @@ class Config:
     wandb_group_name = run_name + run_info
 
 
-    save_model_path = f'{wandb_run_name}.pt'#f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name}.pt'
+    save_model_path = f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name}.pt'
 
 
     wandb_run_name_finetuning = wandb_run_name.replace('(Pre-train)', 
                                        f'(Fine-tune_lr={lr_w_finetuning:.1e}->{max_lr_w_finetuning:.1e}_dropout={dropout_p_finetuning}_{spiking_neuron_type_finetuning}_SS={stateful_synapse_learnable_finetuning})')
     wandb_group_name_finetuning = wandb_group_name.replace('(Pre-train)', '(Fine-tune)')
 
-    save_model_path_finetuning = f'{wandb_run_name_finetuning}.pt'#f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name_finetuning}.pt'
+    save_model_path_finetuning = f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name_finetuning}.pt'
 
     

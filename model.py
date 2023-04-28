@@ -222,7 +222,7 @@ class Model(nn.Module):
 
                 self.reset_model(train=True)
                 
-                if self.config.model_type == 'snn_delays':
+                if self.config.use_wandb and self.config.model_type == 'snn_delays':
                     wandb_pos_log = {}
                     for b in range(len(self.blocks)):
                         curr_pos = self.blocks[b][0][0].P.cpu().detach().numpy()
@@ -296,7 +296,7 @@ class Model(nn.Module):
                 wandb.log(wandb_logs)
 
 
-            if  metric_valid > best_metric_val  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
+            if  metric_valid > best_metric_val:#  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
                 print("# Saving best model...")
                 torch.save(self.state_dict(), self.config.save_model_path)
                 best_metric_val = metric_valid
@@ -309,8 +309,16 @@ class Model(nn.Module):
 
 
     def eval_model(self, loader, device):
+        torch.save(self.state_dict(), 'temp.pt')
         self.eval()
         with torch.no_grad():
+
+            for i in range(len(self.blocks)):
+                self.blocks[i][0][0].SIG *= 0
+                self.blocks[i][0][0].version = 'max'
+                self.blocks[i][0][0].DCK.version = 'max'
+            self.round_pos()     
+
             loss_batch, metric_batch = [], []
             for i, (x, y, _) in enumerate(loader):     
 
@@ -328,5 +336,10 @@ class Model(nn.Module):
                 metric_batch.append(metric)
 
                 self.reset_model(train=False)
-        
+            
+            for i in range(len(self.blocks)):
+                self.blocks[i][0][0].version = 'gauss'
+                self.blocks[i][0][0].DCK.version = 'gauss'
+            self.load_state_dict(torch.load('temp.pt'), strict=True)
+
         return np.mean(loss_batch), np.mean(metric_batch)
