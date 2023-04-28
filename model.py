@@ -19,6 +19,9 @@ class Model(nn.Module):
         self.build_model()
         self.init_model()
 
+        self.init_pos = []
+        for i in range(len(self.blocks)):
+            self.init_pos.append(np.copy(self.blocks[i][0][0].P.cpu().detach().numpy()))
 
 
     def optimizers(self):
@@ -182,11 +185,16 @@ class Model(nn.Module):
 
         loss_epochs = {'train':[], 'valid':[]}
         metric_epochs = {'train':[], 'valid':[]}
-        best_loss_val = 1e6
+        best_loss_val = 1e6 
+        
+        pre_pos_epoch = self.init_pos.copy()
+        pre_pos_5epochs = self.init_pos.copy()
+        batch_count = 0
         for epoch in range(self.config.epochs):
             self.train()
             #last element in the tuple corresponds to the collate_fn return
             loss_batch, metric_batch = [], []
+            pre_pos = pre_pos_epoch.copy()
             for i, (x, y, _) in enumerate(train_loader):
                 # x for shd and ssc is: (batch, time, neurons)
 
@@ -213,7 +221,29 @@ class Model(nn.Module):
 
                 self.reset_model(train=True)
                 
+                if self.config.model_type == 'snn_delays':
+                    wandb_pos_log = {}
+                    for b in range(len(self.blocks)):
+                        curr_pos = self.blocks[b][0][0].P.cpu().detach().numpy()
+                        wandb_pos_log[f'dpos{b}'] = np.abs(curr_pos - pre_pos[b]).mean()
+                        pre_pos[b] = curr_pos.copy()
+
+                    wandb_pos_log.update({"batch":batch_count})
+                    wandb.log(wandb_pos_log)
+                    batch_count += 1
+
             
+            pos_logs = {}
+            for b in range(len(self.blocks)):
+                pos_logs[f'dpos{b}_epoch'] = np.abs(pre_pos[b] - pre_pos_epoch[b]).mean()
+                pre_pos_epoch[b] = pre_pos[b].copy()
+            
+            if epoch%5==0 and epoch>0:
+                for b in range(len(self.blocks)):
+                    pos_logs[f'dpos{b}_5epochs'] = np.abs(pre_pos[b] - pre_pos_5epochs[b]).mean()
+                    pre_pos_5epochs[b] = pre_pos[b].copy()
+
+
             loss_epochs['train'].append(np.mean(loss_batch))
             metric_epochs['train'].append(np.mean(metric_batch))
 
@@ -260,6 +290,7 @@ class Model(nn.Module):
                 model_logs = self.get_model_wandb_logs()
 
                 wandb_logs.update(model_logs)
+                wandb_logs.update(pos_logs)
 
                 wandb.log(wandb_logs)
 

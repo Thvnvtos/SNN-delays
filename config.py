@@ -10,7 +10,7 @@ class Config:
 
     seed = 0
 
-    model_type = 'snn'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
+    model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
     dataset = 'shd'                        # 'shd', 'ssc'
 
     time_step = 10
@@ -24,9 +24,9 @@ class Config:
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 20.0                    # in ms, can't be < time_step
+    init_tau = 10.0                    # in ms, can't be < time_step
 
-    stateful_synapse_tau = 20.0        # in ms, can't be < time_step
+    stateful_synapse_tau = 10.0        # in ms, can't be < time_step
     stateful_synapse = False
     stateful_synapse_learnable = False
 
@@ -78,7 +78,7 @@ class Config:
     ################################################
     #                    Delays                    #
     ################################################
-    DCLSversion = 'max'
+    DCLSversion = 'gauss'
     decrease_sig_method = 'exp'
     kernel_count = 1
 
@@ -131,7 +131,7 @@ class Config:
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)CodeTest|SNN'#'(Pre-train)Baseline|Dsig'
+    run_name = '(Pre-train)Dpos_Test|SNN'#'(Pre-train)Baseline|Dsig'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
