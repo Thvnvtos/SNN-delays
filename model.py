@@ -142,10 +142,15 @@ class Model(nn.Module):
         self.load_state_dict(torch.load(self.config.save_model_path), strict=False)
 
         for i in range(len(self.blocks)):
-            self.blocks[i][0][0].SIG *= 0 
+            self.blocks[i][0][0].SIG *= 0
+            
+            # if i < len(self.blocks) - 2:
+            #     self.blocks[i][0][0].weight.requires_grad = False
+            #     if self.config.use_batchnorm:
+            #         self.blocks[i][0][1].weight.requires_grad = False
+            #         self.blocks[i][0][1].bias.requires_grad = False
 
         self.round_pos()
-
 
         self.config.save_model_path = self.config.save_model_path_finetuning
         self.train_model(train_loader, valid_loader, test_loader, device)
@@ -265,7 +270,8 @@ class Model(nn.Module):
 
             ########################## Logging and Plotting  ##########################
 
-            print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Acc Train = {100*metric_epochs['train'][-1]:.2f}% \nLoss Valid = {loss_epochs['valid'][-1]:.3f}  |  Acc Valid = {100*metric_epochs['valid'][-1]:.2f}%")
+            print(f"=====> Epoch {epoch} : \nLoss Train = {loss_epochs['train'][-1]:.3f}  |  Acc Train = {100*metric_epochs['train'][-1]:.2f}%")
+            print(f"Loss Valid = {loss_epochs['valid'][-1]:.3f}  |  Acc Valid = {100*metric_epochs['valid'][-1]:.2f}%  |  Best Acc Valid = {100*max(metric_epochs['valid'][-1], best_metric_val):.2f}%")
 
 
             #loss_test, acc_test = self.eval_model(test_loader, device)
