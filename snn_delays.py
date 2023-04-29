@@ -106,6 +106,8 @@ class SnnDelays(Model):
             if isinstance(m, Dcls1d):
                 self.positions.append(m.P)
                 self.weights.append(m.weight)
+                if self.config.bias:
+                    self.weights_bn.append(m.bias)
             elif isinstance(m, layer.BatchNorm1d):
                 self.weights_bn.append(m.weight)
                 self.weights_bn.append(m.bias)
