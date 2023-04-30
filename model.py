@@ -192,6 +192,7 @@ class Model(nn.Module):
         loss_epochs = {'train':[], 'valid':[]}
         metric_epochs = {'train':[], 'valid':[]}
         best_metric_val = 0 #1e6 
+        best_loss_val = 1e6 
         
         pre_pos_epoch = self.init_pos.copy()
         pre_pos_5epochs = self.init_pos.copy()
@@ -274,8 +275,8 @@ class Model(nn.Module):
             print(f"Loss Valid = {loss_epochs['valid'][-1]:.3f}  |  Acc Valid = {100*metric_epochs['valid'][-1]:.2f}%  |  Best Acc Valid = {100*max(metric_epochs['valid'][-1], best_metric_val):.2f}%")
 
 
-            #loss_test, acc_test = self.eval_model(test_loader, device)
-            #print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
+            loss_test, acc_test = self.eval_model(test_loader, device)
+            print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
 
 
             if self.config.use_wandb:
@@ -288,8 +289,8 @@ class Model(nn.Module):
                               "acc_train" : metric_epochs['train'][-1], 
                               "loss_valid" : loss_epochs['valid'][-1],
                               "acc_valid" : metric_epochs['valid'][-1],
-                              #"loss_test" : loss_test,
-                              #"acc_test"  : acc_test,
+                              "loss_test" : loss_test,
+                              "acc_test"  : acc_test,
 
                               "lr_w" : lr_w,
                               "lr_pos" : lr_pos}
@@ -303,11 +304,14 @@ class Model(nn.Module):
 
 
             if  metric_valid > best_metric_val:#  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
-                print("# Saving best model...")
-                torch.save(self.state_dict(), self.config.save_model_path)
+                print("# Saving best Metric model...")
+                torch.save(self.state_dict(), self.config.save_model_path.replace('REPL', 'Best_ACC'))
                 best_metric_val = metric_valid
-
-
+            
+            if  loss_valid < best_loss_val:#  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
+                print("# Saving best Loss model...")
+                torch.save(self.state_dict(), self.config.save_model_path.replace('REPL', 'Best_Loss'))
+                best_loss_val = loss_valid
 
         if self.config.use_wandb:
             wandb.run.finish()   

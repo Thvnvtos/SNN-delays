@@ -6,17 +6,17 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '/kaggle/working/'
+    datasets_path = '../Datasets/SSC'
 
     seed = 0
 
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
-    dataset = 'shd'                    # 'shd', 'ssc'
+    dataset = 'ssc'                    # 'shd', 'ssc'
 
-    time_step = 10
-    n_bins = 5
+    time_step = 20
+    n_bins = 10
 
-    epochs = 50
+    epochs = 10
     batch_size = 128
 
 
@@ -24,18 +24,18 @@ class Config:
     #               Model Achitecture              #
     ################################################
     spiking_neuron_type = 'lif'         # plif, lif
-    init_tau = 10.0                    # in ms, can't be < time_step
+    init_tau = 20.0                    # in ms, can't be < time_step
 
-    stateful_synapse_tau = 10.0        # in ms, can't be < time_step
+    stateful_synapse_tau = 20.0        # in ms, can't be < time_step
     stateful_synapse = False
     stateful_synapse_learnable = False
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 256
+    n_hidden_neurons = 64
     n_outputs = 20 if dataset == 'shd' else 35
     
-    dropout_p = 0.4
+    dropout_p = 0.2
     use_batchnorm = True
     bias = False
     detach_reset = True
@@ -87,8 +87,8 @@ class Config:
     max_delay = 200//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 2        if model_type == 'snn_delays' else 0.5
-    final_epoch = (1*epochs)//2     if model_type == 'snn_delays' else 0
+    sigInit = max_delay // 2        if model_type == 'snn_delays' else 0.23
+    final_epoch = (1*epochs) // 2    if model_type == 'snn_delays' else 0
 
 
     left_padding = max_delay-1
@@ -102,13 +102,13 @@ class Config:
     #                 Fine-tuning                  #
     ################################################
     
-    lr_w_finetuning = 1e-4
-    max_lr_w_finetuning = 1.2 * lr_w_finetuning
+    lr_w_finetuning = 1e-3
+    max_lr_w_finetuning = 2 * lr_w_finetuning
 
-    dropout_p_finetuning = 0
+    dropout_p_finetuning = 0.4
     stateful_synapse_learnable_finetuning = False
-    spiking_neuron_type_finetuning = 'lif'
-    epochs_finetuning = 30
+    spiking_neuron_type_finetuning = 'plif'
+    epochs_finetuning = 50
 
 
     ################################################
@@ -133,7 +133,7 @@ class Config:
     wandb_project_name = 'Models comparison'
 
 
-    run_name = '(Pre-train)SOTA|Dsig_(1e-3, 100x)_maxlr(3x)_wd(1e-5)_drop(0.4)'
+    run_name = 'REPL(Pre-train)SSC|Baseline_Dsig'
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}' #{loss}||MaxDelay={max_delay}||neuron={spiking_neuron_type}'
 
@@ -141,13 +141,13 @@ class Config:
     wandb_group_name = run_name + run_info
 
 
-    save_model_path = f'/kaggle/working/{wandb_run_name}.pt'
+    save_model_path = f'{wandb_run_name}.pt'#f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name}.pt'
 
 
     wandb_run_name_finetuning = wandb_run_name.replace('(Pre-train)', 
                                        f'(Fine-tune_lr={lr_w_finetuning:.1e}->{max_lr_w_finetuning:.1e}_dropout={dropout_p_finetuning}_{spiking_neuron_type_finetuning}_SS={stateful_synapse_learnable_finetuning})')
     wandb_group_name_finetuning = wandb_group_name.replace('(Pre-train)', '(Fine-tune)')
 
-    save_model_path_finetuning = f'/kaggle/working/{wandb_run_name_finetuning}.pt'
+    save_model_path_finetuning = f'{wandb_run_name_finetuning}.pt' #f'/content/drive/MyDrive/Models-SNNDelays/{wandb_run_name_finetuning}.pt'
 
     
