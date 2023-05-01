@@ -124,6 +124,13 @@ class SnnDelays(Model):
             for i in range(self.config.n_hidden_layers+1):
                 # can you replace with self.weights ?
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0][0].weight, nonlinearity='relu')
+                
+                if self.config.sparsity_p > 0:
+                    mask = torch.rand(self.blocks[i][0][0].weight.size())
+                    mask[mask>self.config.sparsity_p]=1
+                    mask[mask<=self.config.sparsity_p]=0
+                    self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * mask)
+
 
         if self.config.init_pos_method == 'uniform':
             for i in range(self.config.n_hidden_layers+1):

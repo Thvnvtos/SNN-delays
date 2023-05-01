@@ -6,17 +6,17 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
-    datasets_path = '../Datasets/SSC'
+    datasets_path = '../Datasets/SHD'
 
     seed = 0
 
     model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
-    dataset = 'ssc'                    # 'shd', 'ssc'
+    dataset = 'shd'                    # 'shd', 'ssc'
 
     time_step = 20
     n_bins = 10
 
-    epochs = 10
+    epochs = 15
     batch_size = 128
 
 
@@ -34,11 +34,13 @@ class Config:
     n_hidden_layers = 2
     n_hidden_neurons = 64
     n_outputs = 20 if dataset == 'shd' else 35
+
+    sparsity_p = 0.9
     
     dropout_p = 0.2
     use_batchnorm = True
     bias = False
-    detach_reset = True
+    detach_reset = False
 
     loss = 'sum'           # 'mean', 'max', 'spike_count', 'sum
     loss_fn = 'CEloss'
@@ -92,7 +94,7 @@ class Config:
 
 
     left_padding = max_delay-1
-    right_padding = (max_delay-1) // 2
+    right_padding = (max_delay-1) // 3
 
     init_pos_method = 'uniform'
     init_pos_a = -max_delay//2

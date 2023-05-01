@@ -275,8 +275,8 @@ class Model(nn.Module):
             print(f"Loss Valid = {loss_epochs['valid'][-1]:.3f}  |  Acc Valid = {100*metric_epochs['valid'][-1]:.2f}%  |  Best Acc Valid = {100*max(metric_epochs['valid'][-1], best_metric_val):.2f}%")
 
 
-            loss_test, acc_test = self.eval_model(test_loader, device)
-            print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
+            #loss_test, acc_test = self.eval_model(test_loader, device)
+            #print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
 
 
             if self.config.use_wandb:
@@ -289,8 +289,8 @@ class Model(nn.Module):
                               "acc_train" : metric_epochs['train'][-1], 
                               "loss_valid" : loss_epochs['valid'][-1],
                               "acc_valid" : metric_epochs['valid'][-1],
-                              "loss_test" : loss_test,
-                              "acc_test"  : acc_test,
+                              #"loss_test" : loss_test,
+                              #"acc_test"  : acc_test,
 
                               "lr_w" : lr_w,
                               "lr_pos" : lr_pos}
