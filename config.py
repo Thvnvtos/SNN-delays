@@ -16,14 +16,14 @@ class Config:
     time_step = 20
     n_bins = 10
 
-    epochs = 15
+    epochs = 30
     batch_size = 128
 
 
     ################################################
     #               Model Achitecture              #
     ################################################
-    spiking_neuron_type = 'lif'         # plif, lif
+    spiking_neuron_type = 'lif'         # plif, lif, heaviside
     init_tau = 20.0                    # in ms, can't be < time_step
 
     stateful_synapse_tau = 20.0        # in ms, can't be < time_step
@@ -32,10 +32,10 @@ class Config:
 
     n_inputs = 700//n_bins
     n_hidden_layers = 2
-    n_hidden_neurons = 64
+    n_hidden_neurons = 128
     n_outputs = 20 if dataset == 'shd' else 35
 
-    sparsity_p = 0.9
+    sparsity_p = 0
     
     dropout_p = 0.2
     use_batchnorm = True

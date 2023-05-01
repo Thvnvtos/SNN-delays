@@ -44,6 +44,9 @@ class SnnDelays(Model):
             self.blocks[0][1].insert(0, neuron.ParametricLIFNode(init_tau=self.config.init_tau, v_threshold=self.config.v_threshold, 
                                                        surrogate_function=self.config.surrogate_function, detach_reset=self.config.detach_reset, 
                                                        step_mode='m', decay_input=False, store_v_seq = True))
+        
+        elif self.config.spiking_neuron_type == 'heaviside': 
+            self.blocks[0][1].insert(0, self.config.surrogate_function)
 
 
         if self.config.stateful_synapse:
@@ -68,6 +71,9 @@ class SnnDelays(Model):
                 self.block[1].insert(0, neuron.ParametricLIFNode(init_tau=self.config.init_tau, v_threshold=self.config.v_threshold, 
                                                        surrogate_function=self.config.surrogate_function, detach_reset=self.config.detach_reset, 
                                                        step_mode='m', decay_input=False, store_v_seq = True))
+            
+            elif self.config.spiking_neuron_type == 'heaviside': 
+                self.block[1].insert(0, self.config.surrogate_function)
             
             if self.config.stateful_synapse:
                 self.block[1].append(layer.SynapseFilter(tau=self.config.stateful_synapse_tau, learnable=self.config.stateful_synapse_learnable, 
@@ -206,8 +212,13 @@ class SnnDelays(Model):
             
             
             # we use our spiking neuron filter
-            spikes = self.blocks[block_id][1][0](x)
+            if self.config.spiking_neuron_type != 'heaviside':
+                spikes = self.blocks[block_id][1][0](x)
+            else:
+                spikes = self.blocks[block_id][1][0](x - self.config.v_threshold)
             # we use dropout on generated spikes tensor
+
+
             x = self.blocks[block_id][1][1](spikes)
 
             # we apply synapse filter
@@ -225,10 +236,12 @@ class SnnDelays(Model):
 
         # permute out: (batch, neurons, time) => (time, batch, neurons)  For final spiking neuron filter
         out = out.permute(2,0,1)
-        out = self.blocks[-1][1][0](out)
 
-        if self.config.loss != 'spike_count':
-            out = self.blocks[-1][1][0].v_seq
+        if self.config.spiking_neuron_type != 'heaviside':
+            out = self.blocks[-1][1][0](out)
+
+            if self.config.loss != 'spike_count':
+                out = self.blocks[-1][1][0].v_seq
 
         return out#, self.blocks[0][1][0].v_seq
     
