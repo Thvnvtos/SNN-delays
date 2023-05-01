@@ -256,7 +256,9 @@ class SnnDelays(Model):
 
         for i in range(len(self.blocks)):
             
-            tau_m = self.blocks[i][1][0].tau if self.config.spiking_neuron_type == 'lif' else  1. / self.blocks[i][1][0].w.sigmoid()
+            if self.config.spiking_neuron_type != 'heaviside':
+                tau_m = self.blocks[i][1][0].tau if self.config.spiking_neuron_type == 'lif' else  1. / self.blocks[i][1][0].w.sigmoid()
+            else: tau_m = 0
             
             if self.config.stateful_synapse and i<len(self.blocks)-1:
                 tau_s = self.blocks[i][1][2].tau if not self.config.stateful_synapse_learnable else  1. / self.blocks[i][1][2].w.sigmoid()
