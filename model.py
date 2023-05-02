@@ -313,6 +313,11 @@ class Model(nn.Module):
                 torch.save(self.state_dict(), self.config.save_model_path.replace('REPL', 'Best_Loss'))
                 best_loss_val = loss_valid
 
+            if self.config.dataset == 'ssc' and epoch > 30 and (metric_valid > best_metric_val or loss_valid < best_loss_val):
+                loss_test, acc_test = self.eval_model(test_loader, device)
+                print(f"Loss Test  = {loss_test:.3f}  |  Acc Test = {100*acc_test:.2f}%")
+
+
         if self.config.use_wandb:
             wandb.run.finish()   
     
