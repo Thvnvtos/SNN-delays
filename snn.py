@@ -91,9 +91,20 @@ class SNN(Model):
         self.model = nn.Sequential(*self.model)
         #print(self.model)
 
-        self.weights, self.positions = [], []
-        for name, param in self.named_parameters():
-            self.weights.append(param)
+        self.positions = []
+        self.weights = []
+        self.weights_bn = []
+        self.weights_plif = []
+        for m in self.model.modules():
+            if isinstance(m, layer.Linear):
+                self.weights.append(m.weight)
+                if self.config.bias:
+                    self.weights_bn.append(m.bias)
+            elif isinstance(m, layer.BatchNorm1d):
+                self.weights_bn.append(m.weight)
+                self.weights_bn.append(m.bias)
+            elif isinstance(m, neuron.ParametricLIFNode):
+                self.weights_plif.append(m.w)
 
 
 

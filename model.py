@@ -20,8 +20,9 @@ class Model(nn.Module):
         self.init_model()
 
         self.init_pos = []
-        for i in range(len(self.blocks)):
-            self.init_pos.append(np.copy(self.blocks[i][0][0].P.cpu().detach().numpy()))
+        if self.config.model_type != 'snn':
+            for i in range(len(self.blocks)):
+                self.init_pos.append(np.copy(self.blocks[i][0][0].P.cpu().detach().numpy()))
 
 
     def optimizers(self):
@@ -240,15 +241,16 @@ class Model(nn.Module):
                     batch_count += 1
 
             
-            pos_logs = {}
-            for b in range(len(self.blocks)):
-                pos_logs[f'dpos{b}_epoch'] = np.abs(pre_pos[b] - pre_pos_epoch[b]).mean()
-                pre_pos_epoch[b] = pre_pos[b].copy()
-            
-            if epoch%5==0 and epoch>0:
+            if self.config.model_type == 'snn_delays':
+                pos_logs = {}
                 for b in range(len(self.blocks)):
-                    pos_logs[f'dpos{b}_5epochs'] = np.abs(pre_pos[b] - pre_pos_5epochs[b]).mean()
-                    pre_pos_5epochs[b] = pre_pos[b].copy()
+                    pos_logs[f'dpos{b}_epoch'] = np.abs(pre_pos[b] - pre_pos_epoch[b]).mean()
+                    pre_pos_epoch[b] = pre_pos[b].copy()
+                
+                if epoch%5==0 and epoch>0:
+                    for b in range(len(self.blocks)):
+                        pos_logs[f'dpos{b}_5epochs'] = np.abs(pre_pos[b] - pre_pos_5epochs[b]).mean()
+                        pre_pos_5epochs[b] = pre_pos[b].copy()
 
 
             loss_epochs['train'].append(np.mean(loss_batch))
@@ -298,7 +300,9 @@ class Model(nn.Module):
                 model_logs = self.get_model_wandb_logs()
 
                 wandb_logs.update(model_logs)
-                wandb_logs.update(pos_logs)
+
+                if self.config.model_type == 'snn_delays':
+                    wandb_logs.update(pos_logs)
 
                 wandb.log(wandb_logs)
 
@@ -327,12 +331,13 @@ class Model(nn.Module):
         torch.save(self.state_dict(), 'temp.pt')
         self.eval()
         with torch.no_grad():
-
-            for i in range(len(self.blocks)):
-                self.blocks[i][0][0].SIG *= 0
-                self.blocks[i][0][0].version = 'max'
-                self.blocks[i][0][0].DCK.version = 'max'
-            self.round_pos()     
+            
+            if self.config.model_type != 'snn':
+                for i in range(len(self.blocks)):
+                    self.blocks[i][0][0].SIG *= 0
+                    self.blocks[i][0][0].version = 'max'
+                    self.blocks[i][0][0].DCK.version = 'max'
+                self.round_pos()     
 
             loss_batch, metric_batch = [], []
             for i, (x, y, _) in enumerate(loader):     
@@ -352,7 +357,7 @@ class Model(nn.Module):
 
                 self.reset_model(train=False)
 
-            if self.config.DCLSversion == 'gauss':
+            if self.config.DCLSversion == 'gauss' and self.config.model_type != 'snn':
                 for i in range(len(self.blocks)):
                     self.blocks[i][0][0].version = 'gauss'
                     self.blocks[i][0][0].DCK.version = 'gauss'
