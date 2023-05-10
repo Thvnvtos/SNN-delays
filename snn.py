@@ -113,17 +113,26 @@ class SNN(Model):
     def init_model(self):
 
         set_seed(self.config.seed)
+        self.mask = []
 
         if self.config.init_w_method == 'kaiming_uniform':
             for i in range(self.config.n_hidden_layers+1):
                 # can you replace with self.weights ?
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0][0].weight, nonlinearity='relu')
+                if self.config.sparsity_p > 0:
+                    self.mask.append(torch.rand(self.blocks[i][0][0].weight.size()).to(self.blocks[i][0][0].weight.device))
+                    self.mask[i][self.mask[i]>self.config.sparsity_p]=1
+                    self.mask[i][self.mask[i]<=self.config.sparsity_p]=0
+                    self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * self.mask[i])
 
 
 
     def reset_model(self, train=True):
         functional.reset_net(self)
-
+        for i in range(self.config.n_hidden_layers+1):                
+            if self.config.sparsity_p > 0:
+                self.mask[i] = self.mask[i].to(self.blocks[i][0][0].weight.device)
+                self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * self.mask[i])
 
 
     def decrease_sig(self, epoch):
