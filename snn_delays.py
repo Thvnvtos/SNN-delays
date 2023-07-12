@@ -133,10 +133,12 @@ class SnnDelays(Model):
                 torch.nn.init.kaiming_uniform_(self.blocks[i][0][0].weight, nonlinearity='relu')
                 
                 if self.config.sparsity_p > 0:
-                    self.mask.append(torch.rand(self.blocks[i][0][0].weight.size()).to(self.blocks[i][0][0].weight.device))
-                    self.mask[i][self.mask[i]>self.config.sparsity_p]=1
-                    self.mask[i][self.mask[i]<=self.config.sparsity_p]=0
-                    self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * self.mask[i])
+                    with torch.no_grad():
+                        self.mask.append(torch.rand(self.blocks[i][0][0].weight.size()).to(self.blocks[i][0][0].weight.device))
+                        self.mask[i][self.mask[i]>self.config.sparsity_p]=1
+                        self.mask[i][self.mask[i]<=self.config.sparsity_p]=0
+                        #self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * self.mask[i])
+                        self.blocks[i][0][0].weight *= self.mask[i]
 
 
         if self.config.init_pos_method == 'uniform':
@@ -163,9 +165,10 @@ class SnnDelays(Model):
 
         for i in range(self.config.n_hidden_layers+1):                
             if self.config.sparsity_p > 0:
-                self.mask[i] = self.mask[i].to(self.blocks[i][0][0].weight.device)
-                self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * self.mask[i])
-
+                with torch.no_grad():
+                    self.mask[i] = self.mask[i].to(self.blocks[i][0][0].weight.device)
+                    #self.blocks[i][0][0].weight = torch.nn.Parameter(self.blocks[i][0][0].weight * self.mask[i])
+                    self.blocks[i][0][0].weight *= self.mask[i]
 
         # We use clamp_parameters of the Dcls1d modules
         if train: 

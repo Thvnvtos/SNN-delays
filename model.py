@@ -33,7 +33,8 @@ class Model(nn.Module):
         
         if self.config.model_type in ['snn_delays', 'snn_delays_lr0', 'snn']:
             if self.config.optimizer_w == 'adam':
-                optimizers_return.append(optim.Adam([{'params':self.weights + self.weights_plif, 'lr':self.config.lr_w, 'weight_decay':self.config.weight_decay},
+                optimizers_return.append(optim.Adam([{'params':self.weights, 'lr':self.config.lr_w, 'weight_decay':self.config.weight_decay},
+                                                     {'params':self.weights_plif, 'lr':self.config.lr_w, 'weight_decay':self.config.weight_decay},
                                                      {'params':self.weights_bn, 'lr':self.config.lr_w, 'weight_decay':0}]))
             if self.config.model_type == 'snn_delays':
                 if self.config.optimizer_pos == 'adam':
@@ -94,7 +95,6 @@ class Model(nn.Module):
 
             CEloss = nn.CrossEntropyLoss()
             loss = CEloss(m, y)
-            
             #log_softmax_fn = nn.LogSoftmax(dim=1) 
             #loss_fn = nn.NLLLoss()
             #log_p_y = log_softmax_fn(m)
