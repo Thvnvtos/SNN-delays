@@ -24,3 +24,7 @@ Install PyTorch version ```torch>=2.0.0``` by following instructions on the offi
 ### Others
 - wandb
 - h5py
+
+## Usage
+The first thing to do after installing all the dependencies is to specify the ```datasets_path``` in ```config.py```. Simply create a empty data directory, preferably with two subdirectories, one for SHD and the other SSC. The ```datasets_path``` should correspond to these subdirectories.
+The datasets will then be downloaded and preprocessed automatically.
