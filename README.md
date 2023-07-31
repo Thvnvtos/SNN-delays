@@ -16,7 +16,7 @@ python setup.py install --user
 Installing SpikingJelly using ```pip``` is not yet compatible with this repo.
 
 ### Other
-install the other dependencies from the requirements.txt file using:
+Install the other dependencies from the requirements.txt file using:
 ```
 pip install -r requirements.txt
 ```
