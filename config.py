@@ -6,19 +6,22 @@ class Config:
     #            General configuration             #
     ################################################
     debug = False
+
+    # dataset could be set to either 'shd or 'ssc', change datasets_path accordingly.
+    dataset = 'shd'                    
     datasets_path = 'Datasets/SHD'
 
     seed = 0
 
-    model_type = 'snn_delays'          # 'ann', 'snn', 'snn_delays' 'snn_delays_lr0'
-    dataset = 'shd'                    # 'shd', 'ssc'
+    # model type could be set to : 'snn_delays' |  'snn_delays_lr0' |  'snn'
+    model_type = 'snn_delays'          
+    
 
     time_step = 10
     n_bins = 5
 
     epochs = 150
     batch_size = 256
-
 
     ################################################
     #               Model Achitecture              #
@@ -82,14 +85,15 @@ class Config:
     ################################################
     #                    Delays                    #
     ################################################
-    DCLSversion = 'gauss'
+    DCLSversion = 'gauss' if model_type =='snn_delays' else 'max'
     decrease_sig_method = 'exp'
     kernel_count = 1
 
     max_delay = 250//time_step
     max_delay = max_delay if max_delay%2==1 else max_delay+1 # to make kernel_size an odd number
     
-    sigInit = max_delay // 2        if model_type == 'snn_delays' else 0.23
+    # For constant sigma without the decreasing policy, set model_type == 'snn_delays' and sigInit = 0.23 and final_epoch = 0
+    sigInit = max_delay // 2        if model_type == 'snn_delays' else 0
     final_epoch = (1*epochs)//4     if model_type == 'snn_delays' else 0
 
 
@@ -103,7 +107,8 @@ class Config:
     ################################################
     #                 Fine-tuning                  #
     ################################################
-    
+    # BELOW IS NOT USED, NEED TO UPDATE
+
     lr_w_finetuning = 1e-4
     max_lr_w_finetuning = 1.2 * lr_w_finetuning
 
@@ -131,11 +136,14 @@ class Config:
     #############################################
     #                      Wandb                #
     #############################################
+    # If use_wand is set to True, specify your wandb api token in wandb_token and the project and run names. 
+
     use_wandb = False
+    wandb_token = 'your_wandb_token'
     wandb_project_name = 'Wandb Project Name'
 
-
     run_name = 'Wandb Run Name'
+
 
     run_info = f'||{model_type}||{dataset}||{time_step}ms||bins={n_bins}'
 

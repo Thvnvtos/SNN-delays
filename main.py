@@ -10,9 +10,13 @@ print(f"\n===> Device = {device}")
 config = Config()
 
 train_loader, valid_loader= SHD_dataloaders(config)
-#model = SNN(config).to(device)
-model = SnnDelays(config).to(device)
 
-#model.round_pos()
+if config.model_type == 'snn':
+    model = SNN(config).to(device)
+else:
+    model = SnnDelays(config).to(device)
+
+if config.model_type == 'snn_delays_lr0':
+    model.round_pos()
 
 model.train_model(train_loader, valid_loader, '.', device)

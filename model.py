@@ -173,7 +173,7 @@ class Model(nn.Module):
             
             cfg = {k:v for k,v in dict(vars(Config)).items() if '__' not in k}
 
-            wandb.login(key="xxx")
+            wandb.login(key=self.config.wandb_token)
 
             wandb.init(
                 project= self.config.wandb_project_name,
