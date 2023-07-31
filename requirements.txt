@@ -1,0 +1,5 @@
+torch>=2.0.0
+dcls
+wandb
+pillow
+h5py
