@@ -325,11 +325,14 @@ class Model(nn.Module):
                 print("# Saving best Metric model...")
                 torch.save(self.state_dict(), self.config.save_model_path.replace('REPL', 'Best_ACC'))
                 best_metric_val = metric_valid
-
+            
             if  loss_valid < best_loss_val:#  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
                 print("# Saving best Loss model...")
                 torch.save(self.state_dict(), self.config.save_model_path.replace('REPL', 'Best_Loss'))
                 best_loss_val = loss_valid
+            
+            if  metric_test > best_metric_test:#  and (self.config.model_type != 'snn_delays' or epoch >= self.config.final_epoch - 1):
+                best_metric_test = metric_test
 
 
         if self.config.use_wandb:
