@@ -7,7 +7,7 @@ class Config:
     ################################################
     debug = False
 
-    # dataset could be set to either 'shd or 'ssc', change datasets_path accordingly.
+    # dataset could be set to either 'shd, 'ssc' or gsc, change datasets_path accordingly.
     dataset = 'shd'                    
     datasets_path = 'Datasets/SHD'
 
@@ -150,8 +150,8 @@ class Config:
     wandb_run_name = run_name + f'||seed={seed}' + run_info
     wandb_group_name = run_name + run_info
 
-
-    save_model_path = f'{wandb_run_name}.pt'
+    # REPL is going to be replaced with best_acc or best_loss for best model according to validation accuracy or loss
+    save_model_path = f'{wandb_run_name}_REPL.pt'
 
 
     wandb_run_name_finetuning = wandb_run_name.replace('(Pre-train)', 
