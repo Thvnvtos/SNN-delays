@@ -12,6 +12,13 @@ from spikingjelly.datasets.shd import SpikingHeidelbergDigits
 from spikingjelly.datasets.shd import SpikingSpeechCommands
 from spikingjelly.datasets import pad_sequence_collate
 
+import torch
+import torchaudio
+from torchaudio.transforms import Spectrogram, MelScale, AmplitudeToDB, Resample
+from torchaudio.datasets.speechcommands import SPEECHCOMMANDS
+from torchvision import transforms
+from torch.utils.data import Dataset
+import augmentations
 
 
 class RNoise(object):
@@ -127,6 +134,20 @@ def SSC_dataloaders(config):
 
   return train_loader, valid_loader, test_loader
 
+def GSC_dataloaders(config):
+  set_seed(config.seed)
+
+  train_dataset = GSpeechCommands(config.datasets_path, 'training', transform=build_transform(False), target_transform=target_transform)
+  valid_dataset = GSpeechCommands(config.datasets_path, 'validation', transform=build_transform(False), target_transform=target_transform)
+  test_dataset = GSpeechCommands(config.datasets_path, 'testing', transform=build_transform(False), target_transform=target_transform)
+
+
+  train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=4)
+  valid_loader = DataLoader(valid_dataset, batch_size=config.batch_size, num_workers=4)
+  test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=4)
+
+  return train_loader, valid_loader, test_loader
+
 
 class BinnedSpikingHeidelbergDigits(SpikingHeidelbergDigits):
     def __init__(
@@ -185,6 +206,8 @@ class BinnedSpikingHeidelbergDigits(SpikingHeidelbergDigits):
 
             return binned_frames, label
 
+
+
 class BinnedSpikingSpeechCommands(SpikingSpeechCommands):
     def __init__(
             self,
@@ -241,3 +264,64 @@ class BinnedSpikingSpeechCommands(SpikingSpeechCommands):
                 label = self.target_transform(label)
 
             return binned_frames, label
+
+
+def build_transform(is_train):
+    sample_rate=16000
+    window_size=256
+    hop_length=80
+    n_mels=140
+    f_min=50
+    f_max=14000
+
+    t = [augmentations.PadOrTruncate(sample_rate),
+         Resample(sample_rate, sample_rate // 2)]
+    if is_train:
+        t.extend([augmentations.RandomRoll(dims=(1,)),
+                  augmentations.SpeedPerturbation(rates=(0.5, 1.5), p=0.5)
+                 ])
+
+    t.append(Spectrogram(n_fft=window_size, hop_length=hop_length, power=2))
+
+    if is_train:
+        pass
+
+    t.extend([MelScale(n_mels=n_mels,
+                       sample_rate=sample_rate // 2,
+                       f_min=f_min,
+                       f_max=f_max,
+                       n_stft=window_size // 2 + 1),
+              AmplitudeToDB()
+             ])
+
+    return transforms.Compose(t)
+
+labels = ['backward', 'bed', 'bird', 'cat', 'dog', 'down', 'eight', 'five', 'follow', 'forward', 'four', 'go', 'happy', 'house', 'learn', 'left', 'marvin', 'nine', 'no', 'off', 'on', 'one', 'right', 'seven', 'sheila', 'six', 'stop', 'three', 'tree', 'two', 'up', 'visual', 'wow', 'yes', 'zero']
+
+target_transform = lambda word : torch.tensor(labels.index(word))
+
+class GSpeechCommands(Dataset):
+    def __init__(self, root, split_name, transform=None, target_transform=None, download=True):
+
+        self.split_name = split_name
+        self.transform = transform
+        self.target_transform = target_transform
+        self.dataset = SPEECHCOMMANDS(root, download=download, subset=split_name)
+
+
+    def __len__(self):
+        return len(self.dataset)
+
+
+    def __getitem__(self, index):
+        waveform, _,label,_,_ = self.dataset.__getitem__(index)
+
+        if self.transform is not None:
+            waveform = self.transform(waveform).squeeze().t()
+
+        target = label
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return waveform, target, torch.zeros(1)
