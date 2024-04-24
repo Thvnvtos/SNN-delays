@@ -4,6 +4,10 @@
 
 #  Learning Delays in Spiking Neural Networks using Dilated Convolutions with Learnable Spacings
 
+![](https://github.com/Thvnvtos/SNN-delays/blob/master/delays_figures.png)
+
+This is the official implementation of [Learning Delays in Spiking Neural Networks using Dilated Convolutions with Learnable Spacings](https://openreview.net/forum?id=4r2ybzJnmN) by Ilyass Hammouamri, Ismail Khalfaoui Hassani and Timothée Masquelier.
+
 ## Dependencies
 ### Python
 Please use Python 3.9 and above ```python>=3.9```
